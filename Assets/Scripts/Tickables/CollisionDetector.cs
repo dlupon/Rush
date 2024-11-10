@@ -1,5 +1,7 @@
+using Com.UnBocal.Rush.Properties;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 
 namespace Com.UnBocal.Rush.Tickables
@@ -52,17 +54,18 @@ namespace Com.UnBocal.Rush.Tickables
         {
             bool l_collisionDetected = default;
             RaycastHit l_hit = default;
-            Vector3 l_direction = m_transform.forward;
+            Vector3 l_direction = GetComponent<Rolling>().Direction;
             int l_currentDrectionIndex;
             int l_maxDirectionIndex = 4;
 
             for (l_currentDrectionIndex = 0; l_currentDrectionIndex  < l_maxDirectionIndex; l_currentDrectionIndex++)
             {
-                l_collisionDetected = LunchRaycast(m_transform.position + _offset - l_direction * .3f, l_direction, 1.25f, out l_hit, _color, .1f);
+                l_collisionDetected = LunchRaycast(m_transform.position + _offset, l_direction, 1f, out l_hit, _color, .1f);
 
                 if (!l_collisionDetected)
                 {
                     if (l_currentDrectionIndex <= 0) return;
+                    Debug.DrawLine(m_transform.position, m_transform.position + l_direction * 5f, Color.magenta, Game.Properties.TickInterval * 4);
                     CollisionWall.Invoke(l_direction);
                     return;
                 }

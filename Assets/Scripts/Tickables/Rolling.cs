@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using Com.UnBocal.Rush.Properties;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 
 namespace Com.UnBocal.Rush.Tickables
@@ -10,6 +11,8 @@ namespace Com.UnBocal.Rush.Tickables
     [RequireComponent(typeof(CollisionDetector))]
     public class Rolling : Tickable
     {
+        public Vector3 Direction { get => _direction; }
+
         // Components
         [SerializeField] private Transform _transformRenderer = null;
         private CollisionDetector _collisionDetector = null;
@@ -32,6 +35,7 @@ namespace Com.UnBocal.Rush.Tickables
         private void Start()
         {
             _positionCorrector = (Mathf.Sqrt(2) - 1) * .5f;
+            _endPosition = Game.Properties.WorldGrid.WorldToCell(m_transform.position);
             SetSpawn();
         }
 
@@ -56,6 +60,11 @@ namespace Com.UnBocal.Rush.Tickables
 
         protected override void LateTick() => MotionAction();
 
+        private void FixedUpdate()
+        {
+            Debug.DrawLine( Vector3.up * .75f + _startPosition, Vector3.up * .75f + _endPosition, Color.black, .1f);
+        }
+
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
         private void CubeCollision()
         {
@@ -74,9 +83,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void SetStartMove(Vector3 pDirection)
         {
-            ChangeOrientation(pDirection);
-            UpdatePositionsAndDirection(pDirection);
-            m_tickListerner.WaitFor(3);
+            _direction = pDirection;
             MotionAction = StartMove;
         }
 
@@ -101,6 +108,8 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void StartMove()
         {
+            UpdatePositionsAndDirection(_direction);
+
             m_tickListerner.WaitFor(2);
 
             float duration = Game.Properties.TickInterval * m_tickListerner.TickLeft;
@@ -137,13 +146,14 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void UpdatePositionsAndRotation()
         {
-            _startPosition = _transformRenderer.position;
-            _endPosition = m_transform.position + _direction;
+            _startPosition = _endPosition;
+            _endPosition = _startPosition + _direction;
         }
 
         private void UpdatePositionsAndDirection(Vector3 pDirection)
         {
             _direction = pDirection.normalized;
+            ChangeOrientation(_direction);
             _rotationAxis = Quaternion.AngleAxis(ROTATION, Vector3.up) * _direction * ROTATION;
             UpdatePositionsAndRotation();
         }
@@ -151,8 +161,13 @@ namespace Com.UnBocal.Rush.Tickables
         private void ChangeOrientation(Vector3 pDirection)
         {
             Quaternion rotation = _transformRenderer.rotation;
-            m_transform.rotation = Quaternion.LookRotation(pDirection);
+            m_transform.rotation = Quaternion.LookRotation(pDirection.normalized);
             _transformRenderer.rotation = rotation;
+        }
+
+        private void test()
+        {
+
         }
     }
 }
