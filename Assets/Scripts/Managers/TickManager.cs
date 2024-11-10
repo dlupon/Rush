@@ -11,7 +11,7 @@ namespace Com.UnBocal.Rush.Managers
         // Ticks
         [SerializeField] private int _tickPerSecondTarget = TICK_PER_SECOND;
         private float _tickPerSecond = default;
-        private const int TICK_PER_SECOND = 4;
+        private const int TICK_PER_SECOND = 8;
         private float _tickIntervalTarget = default;
         private float _tickInterval = default;
         private int _tickCount = default;
@@ -46,18 +46,6 @@ namespace Com.UnBocal.Rush.Managers
 
             _tickInterval += (_tickIntervalTarget - _tickInterval) * .1f;
             _tickPerSecond += (_tickPerSecondTarget - _tickPerSecond) * .1f;
-
-            Game.Properties.TickInterval = _tickInterval;
-            Time.timeScale = _tickPerSecond / TICK_PER_SECOND; // Ratio Scaling The Time Based On The Number Of Tick Per Second
-        }
-
-        [ContextMenu("Fixe Game Speed")]
-        private void UpdateGameSpeedInstant()
-        {
-            _tickIntervalTarget = 1f / ((float)_tickPerSecondTarget); // One Second Divide By The Number Of Tick
-
-            _tickInterval = _tickIntervalTarget;
-            _tickPerSecond = _tickPerSecondTarget;
 
             Game.Properties.TickInterval = _tickInterval;
             Time.timeScale = _tickPerSecond / TICK_PER_SECOND; // Ratio Scaling The Time Based On The Number Of Tick Per Second

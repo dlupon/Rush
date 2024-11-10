@@ -110,9 +110,10 @@ namespace Com.UnBocal.Rush.Tickables
         {
             UpdatePositionsAndDirection(_direction);
 
-            m_tickListerner.WaitFor(2);
+            // m_tickListerner.WaitFor(2);
+            WaitFor(2);
 
-            float duration = Game.Properties.TickInterval * m_tickListerner.TickLeft;
+            float duration = Game.Properties.TickInterval * m_tickLeft;
 
             _transformRenderer.DOKill(); m_transform.DOKill();
             _transformRenderer.DORotate(_rotationAxis, duration, RotateMode.WorldAxisAdd).SetEase(_easeStartMoving);
