@@ -1,6 +1,7 @@
 using Com.UnBocal.Rush.Properties;
 using System.Collections;
 using System.Linq;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -9,46 +10,59 @@ namespace Com.UnBocal.Rush.Managers
     public class TickManager : MonoBehaviour
     {
         // Ticks
-        [SerializeField] private int _tickPerSecondTarget = TICK_PER_SECOND;
-        private float _tickPerSecond = default;
+        [SerializeField] private float _tickPerSecond = 1;
         private const int TICK_PER_SECOND = 8;
         private float _tickIntervalTarget = default;
         private float _tickInterval = default;
         private int _tickCount = default;
         private bool _isTicking = false;
 
+        private const float TICK_DURATION = 1f;
+        private float _tickRatio = 0f;
+        private float _time = 0f;
+
         private void Start() => StartTicking();
+
+
+
+        private void Update()
+        {
+            Ticking();
+        }
 
         private void StartTicking()
         {
             _isTicking = true;
-            UpdateGameSpeed();
-            StartCoroutine(nameof(Ticking));
+            ResetTick();
         }
 
-        private IEnumerator Ticking()
+        private void ResetTick()
         {
-            while (_isTicking) yield return Tick(Game.Signals.Tick);
+            _tickRatio = 0;
+            _time = 0;
         }
 
-        private IEnumerator Tick(UnityEvent pTickEvent)
+        private void UpdateTimeTick()
+        {
+            _time += _tickPerSecond * Time.deltaTime;
+            Game.Properties.SetTickRatio(_tickRatio = _time / TICK_DURATION);
+        }
+
+        private void Ticking()
+        {
+            if (_time >= TICK_DURATION)
+            {
+                ResetTick();
+                Tick();
+            }
+            UpdateTimeTick();
+        }
+       
+
+        private void Tick()
         {
             _tickCount++;
-            UpdateGameSpeed();
-            pTickEvent.Invoke();
-            yield return new WaitForSeconds(_tickInterval);
-        }
-
-        
-        private void UpdateGameSpeed()
-        {
-            _tickIntervalTarget = 1f / ((float)_tickPerSecondTarget); // One Second Divide By The Number Of Tick
-
-            _tickInterval += (_tickIntervalTarget - _tickInterval) * .1f;
-            _tickPerSecond += (_tickPerSecondTarget - _tickPerSecond) * .1f;
-
-            Game.Properties.TickInterval = _tickInterval;
-            Time.timeScale = _tickPerSecond / TICK_PER_SECOND; // Ratio Scaling The Time Based On The Number Of Tick Per Second
+            Game.Signals.Tick.Invoke();
         }
     }
 }

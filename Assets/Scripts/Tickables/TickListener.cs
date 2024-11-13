@@ -8,7 +8,6 @@ namespace Com.UnBocal.Rush.Tickables
     {
         // Event
         public UnityEvent LocalTick = new UnityEvent();
-        public UnityEvent LocalLateTick = new UnityEvent();
 
         // Getters
         public bool IsListening { get => _isListening; }
@@ -20,16 +19,12 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Start() => SetTickEvents();
 
-        private void SetTickEvents()
-        {
-            Game.Signals.Tick.AddListener(Tick);
-        }
+        private void SetTickEvents() => Game.Signals.Tick.AddListener(Tick);
 
         private void Tick()
         {
             if (!CanTick()) return;
             LocalTick.Invoke();
-            LocalLateTick.Invoke();
         }
 
         private bool CanTick()

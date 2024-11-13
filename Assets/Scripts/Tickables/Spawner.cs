@@ -10,6 +10,7 @@ namespace Com.UnBocal.Rush.Tickables
     public class Spawner : Tickable
     {
         // Components
+        [SerializeField] private GameObject _gameObject;
         [SerializeField] private Transform _transformRenderer;
         [SerializeField] private MeshRenderer _meshRenderer;
 
@@ -27,19 +28,38 @@ namespace Com.UnBocal.Rush.Tickables
             GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
         }
 
-        protected override void LateTick() => Spawn();
+        protected override void SetComponents()
+        {
+            base.SetComponents();
+            _gameObject = gameObject;
+        }
+
+        protected override void Tick() => Spawn();
 
         private void Spawn()
         {
             if (_spawningCount >= _spawningRate.Length) return;
             if (_spawningRate[_spawningCount] != 0)
             {
-                Transform _currentCube = Instantiate(_cubeFactory).transform;
-                _currentCube.position = m_transform.position;
-                _currentCube.rotation = Quaternion.AngleAxis(90f * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.rotation;
-                _currentCube.GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
+                if (_spawningCount == _spawningRate.Length - 1 && _isCube) SetAsCube();
+                else SpawnCube();
             }
             _spawningCount++;
+        }
+
+        private void SpawnCube()
+        {
+            Transform _currentCube = Instantiate(_cubeFactory).transform;
+            _currentCube.position = m_transform.position;
+            _currentCube.rotation = Quaternion.AngleAxis(90f * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.rotation;
+            _currentCube.GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
+        }
+    
+        private void SetAsCube()
+        {
+            Rolling _rollingComponent = _gameObject.AddComponent<Rolling>();
+            _rollingComponent.SetRenderer(_transformRenderer);
+            Destroy(this);
         }
     }
 }

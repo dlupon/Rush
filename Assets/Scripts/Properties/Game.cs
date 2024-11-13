@@ -14,11 +14,10 @@ namespace Com.UnBocal.Rush.Properties
 
         public class Properties
         {
-            public static Grid WorldGrid { get => _worldGrid; }
-            private static Grid _worldGrid = new Grid();
-            public static float TickInterval = 1f;
+            private static float _tickRatio;
+            public static float TickRatio { get => _tickRatio; }
 
-            public static void SetGrid(Grid pGrid) => _worldGrid = pGrid;
+            public static float SetTickRatio(float pTickRatio) => _tickRatio = pTickRatio;
         }
     }
 }

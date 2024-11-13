@@ -29,7 +29,6 @@ namespace Com.UnBocal.Rush.Tickables
         private void SetTickEvents()
         {
             m_tickListerner.LocalTick.AddListener(OnTick);
-            m_tickListerner.LocalLateTick.AddListener(OnLateTick);
         }
 
         protected virtual void OnAwake() { }
@@ -38,11 +37,6 @@ namespace Com.UnBocal.Rush.Tickables
         {
             if (--_tickLeft > 0) return;
             Tick();
-        }
-        protected virtual void OnLateTick()
-        {
-            if (_tickLeft > 0) return;
-            LateTick();
         }
         protected virtual void Tick()
         {

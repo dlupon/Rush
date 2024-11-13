@@ -1,7 +1,9 @@
 using Com.UnBocal.Rush.Properties;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
+using UnityEngine.WSA;
 
 
 namespace Com.UnBocal.Rush.Tickables
@@ -10,6 +12,7 @@ namespace Com.UnBocal.Rush.Tickables
     {
         // Event
         public UnityEvent<Vector3> CollisionWall = new UnityEvent<Vector3>();
+        public UnityEvent<Vector3> CollisionArrow = new UnityEvent<Vector3>();
         public UnityEvent CollisionCube = new UnityEvent();
         public UnityEvent Stuck = new UnityEvent();
 
@@ -18,6 +21,12 @@ namespace Com.UnBocal.Rush.Tickables
         private Rolling _rolling;
 
         // Collosion
+        private const float _DEBUG_RAY_DURATION = .1f;
+        private const float RAYCAST_LENGTH = 1f;
+        private bool _collisionDetected = false;
+        private RaycastHit _hit;
+        private Vector3 _direction;
+        private Vector3 _groundDirection = Vector3.down;
         private Vector3 _offset = Vector3.up * .5f;
 
         // Debug
@@ -38,7 +47,6 @@ namespace Com.UnBocal.Rush.Tickables
             base.OnAwake();
             _colorIndex = _colorCount++;
             _color = _colors[_colorIndex];
-
         }
 
         protected override void SetComponents()
@@ -48,46 +56,63 @@ namespace Com.UnBocal.Rush.Tickables
             _rolling = GetComponent<Rolling>();
         }
 
-        protected override void Tick() => CheckCollision();
-
-        public void CheckCollision()
+        protected override void Tick()
         {
-            bool l_collisionDetected = default;
-            RaycastHit l_hit = default;
-            Vector3 l_direction = GetComponent<Rolling>().Direction;
+            if (CheckCollisionGround()) return;
+            CheckCollisionWallAndBlocs();
+        }
+
+        private bool CheckCollisionGround()
+        {
+            LaunchRaycast(_groundDirection);
+            if (!_collisionDetected) return true;
+            if (_hit.collider.tag.Contains("Arrow"))
+            {
+                CollisionArrow.Invoke(_hit.collider.transform.forward);
+                return true;
+            }
+            return false;
+        }
+
+        public void CheckCollisionWallAndBlocs()
+        {
+            _direction = GetComponent<Rolling>().Direction;
             int l_currentDrectionIndex;
             int l_maxDirectionIndex = 4;
 
             for (l_currentDrectionIndex = 0; l_currentDrectionIndex  < l_maxDirectionIndex; l_currentDrectionIndex++)
             {
-                l_collisionDetected = LunchRaycast(m_transform.position + _offset, l_direction, 1f, out l_hit, _color, .1f);
+                LaunchRaycast(_direction, _color);
 
-                if (!l_collisionDetected)
+                if (!_collisionDetected)
                 {
                     if (l_currentDrectionIndex <= 0) return;
-                    Debug.DrawLine(m_transform.position, m_transform.position + l_direction * 5f, Color.magenta, Game.Properties.TickInterval * 4);
-                    CollisionWall.Invoke(l_direction);
+                    Debug.DrawLine(m_transform.position, m_transform.position + _direction * 5f, Color.magenta, 4f);
+                    CollisionWall.Invoke(_direction);
                     return;
                 }
 
-                if (l_hit.collider.tag != "Tile")
+                if (_hit.collider.tag != "Tile")
                 {
                     CollisionCube.Invoke();
                     Time.timeScale = 0;
-                    l_hit.collider.transform.position += Vector3.up;
+                    _hit.collider.transform.position += Vector3.up;
                     return;
                 }
 
-                l_direction = Quaternion.AngleAxis(Rolling.ROTATION, Vector3.up) * l_direction;
+                _direction = Quaternion.AngleAxis(Rolling.ROTATION, Vector3.up) * _direction;
             }
 
             if (l_currentDrectionIndex >= l_maxDirectionIndex) Stuck.Invoke();
         }
 
-        private bool LunchRaycast(Vector3 pPos, Vector3 pDirection, float pLength, out RaycastHit pHitInfo, Color pColor = default, float pDuration = 0f)
+        private void LaunchRaycast(Vector3 pDirection, Color pColor)
         {
-            Debug.DrawLine(pPos, pPos + pDirection * pLength, pColor, pDuration);
-            return Physics.Raycast(pPos, pDirection, out pHitInfo, pLength);
+            Vector3 l_position = m_transform.position + _offset;
+            Debug.DrawLine(l_position, l_position + pDirection * RAYCAST_LENGTH, pColor, _DEBUG_RAY_DURATION);
+            _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH);
         }
+
+        private void LaunchRaycast(Vector3 pDirection) => LaunchRaycast(pDirection, Color.red);
     }
 }

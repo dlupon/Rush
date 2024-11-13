@@ -4,6 +4,9 @@ using UnityEngine;
 using Com.UnBocal.Rush.Properties;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
+using TMPro;
+using Unity.VisualScripting;
+using UnityEditor.UIElements;
 
 
 namespace Com.UnBocal.Rush.Tickables
@@ -18,15 +21,22 @@ namespace Com.UnBocal.Rush.Tickables
         private CollisionDetector _collisionDetector = null;
 
         // Animation
-        [SerializeField] private Ease _easeStartMoving = Ease.InBack;
-        [SerializeField] private Ease _easeMoving = Ease.Linear;
+        [SerializeField] private AnimationCurve _curveMove = null;
 
-        // Motion Properties
-        private Action MotionAction;
+        // Stats
+        private Action OnUpdate;
+        private Action OnTick;
+
         // Rotation
+        [SerializeField] private int _lineNumber = 10;
         public const float ROTATION = 90f;
-        private float _positionCorrector = 0f;
         private Vector3 _rotationAxis;
+
+        private Quaternion _startRotation = Quaternion.identity;
+        private Quaternion _endRotation = Quaternion.identity;
+
+        private Quaternion _startRotationPosition;
+        private Quaternion _endRotationPosition;
         // Movements
         private Vector3 _direction = Vector3.forward;
         private Vector3 _startPosition, _endPosition = Vector3.zero;
@@ -34,13 +44,14 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         private void Start()
         {
-            _positionCorrector = (Mathf.Sqrt(2) - 1) * .5f;
-            _endPosition = Game.Properties.WorldGrid.WorldToCell(m_transform.position);
-            SetSpawn();
+            _endPosition = m_transform.position;
+            _direction = m_transform.forward;
+            SetCurve();
+            SetMove();
         }
 
-        private void Update() => CorrectY();
-
+        private void Update() => OnUpdate();
+        
         protected override void SetComponents()
         {
             base.SetComponents();
@@ -51,124 +62,142 @@ namespace Com.UnBocal.Rush.Tickables
         protected override void ConnectEvents()
         {
             _collisionDetector.CollisionWall.AddListener(WallCollision);
+            _collisionDetector.CollisionArrow.AddListener(WallCollision);
             _collisionDetector.CollisionCube.AddListener(CubeCollision);
             _collisionDetector.Stuck.AddListener(SetStuck);
         }
 
-        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Ticking
-        // protected override void FirstTick() => MotionAction();
-
-        protected override void LateTick() => MotionAction();
-
-        private void FixedUpdate()
-        {
-            Debug.DrawLine( Vector3.up * .75f + _startPosition, Vector3.up * .75f + _endPosition, Color.black, .1f);
-        }
-
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
+
+        protected override void Tick() => OnTick();
+
         private void CubeCollision()
         {
             SetSpawn();
         }
 
-        private void WallCollision(Vector3 pDirection)
+        private void OnArrowCollision(Vector3 pDirection)
         {
-            SetStartMove(pDirection);
+            ChangeOrientation(pDirection);
+            SetMove();
         }
 
+        private void WallCollision(Vector3 pDirection) => SetStartMove(pDirection);
+
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
-        private void SetSpawn() => MotionAction = Spawn;
+        private void SetSpawn()
+        {
+            OnUpdate = UpdateStuck;
+            OnTick = TickSpawn;
+        }
 
         private void SetStartMove() => SetStartMove(m_transform.forward);
 
         private void SetStartMove(Vector3 pDirection)
         {
-            _direction = pDirection;
-            MotionAction = StartMove;
-        }
-
-        private void SetMove() => MotionAction = Move;
-
-        private void SetStuck() => MotionAction = Stuck;
-
-        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // States
-        private void Spawn()
-        {
-            m_tickListerner.WaitFor(2);
-
-            Vector3 l_scale = m_transform.localScale;
-            float l_duration = Game.Properties.TickInterval * m_tickListerner.TickLeft;
-            _transformRenderer.DOKill();
-            _transformRenderer.DOScale(l_scale, l_duration).From(Vector3.zero).SetEase(Ease.OutElastic);
-
-            SetStartMove();
-
-            SetText(nameof(Spawn));
-        }
-
-        private void StartMove()
-        {
-            UpdatePositionsAndDirection(_direction);
-
-            // m_tickListerner.WaitFor(2);
             WaitFor(2);
-
-            float duration = Game.Properties.TickInterval * m_tickLeft;
-
-            _transformRenderer.DOKill(); m_transform.DOKill();
-            _transformRenderer.DORotate(_rotationAxis, duration, RotateMode.WorldAxisAdd).SetEase(_easeStartMoving);
-            m_transform.DOMove(_endPosition, duration).SetEase(_easeStartMoving);
-
-            SetText(nameof(StartMove));
-
-            SetMove();
+            _direction = pDirection;
+            OnUpdate = UpdateStuck;
+            OnTick = TickStartMove;
         }
 
-        private void Move()
+        private void SetMove()
         {
-            UpdatePositionsAndRotation();
-
-            _transformRenderer.DOKill(); m_transform.DOKill();
-            _transformRenderer.DORotate(_rotationAxis, Game.Properties.TickInterval, RotateMode.WorldAxisAdd).SetEase(_easeMoving);
-            m_transform.DOMove(_endPosition, Game.Properties.TickInterval).SetEase(_easeMoving);
-
-            SetText(nameof(Move));
+            ChangeOrientation();
+            UpdateRotationProperties();
+            TickMove();
+            OnTick = TickMove;
+            OnUpdate = UpdateMove;
         }
 
-        private void Stuck() { SetText(nameof(Stuck)); }
+        private void SetStuck()
+        {
+            OnUpdate = UpdateStuck;
+            OnTick = UpdateStuck;
+        }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update States
+
+        private void UpdateMove()
+        {
+            Vector3 l_position = -(_direction + Vector3.down).normalized * Mathf.Sqrt(2) * .5f;
+            bool l_ratioOutofBounds = Game.Properties.TickRatio >= 1f;
+            float l_ratio = l_ratioOutofBounds ? 1 : _curveMove.Evaluate(Game.Properties.TickRatio);
+            float l_PositionMultiplyer = Mathf.Floor(l_ratio);
+            Vector3 l_PositionOffset = _direction * ((l_ratioOutofBounds ? 0 : l_PositionMultiplyer) + .5f);
+
+            Quaternion l_rotationCube = Quaternion.LerpUnclamped(_startRotation, _endRotation, l_ratio);
+
+            Quaternion l_rotationPosition = l_ratio < 0 ?
+                Quaternion.LerpUnclamped(_endRotationPosition, _startRotationPosition, -l_ratio) :                  // Under 0
+                l_ratio > 1 ? Quaternion.LerpUnclamped(_startRotationPosition, _endRotationPosition, l_ratio - 1) : // Above 1
+                Quaternion.Lerp(_startRotationPosition, _endRotationPosition, l_ratio);                             // Between 0 And 1
+
+            _transformRenderer.rotation = l_rotationCube;
+            _transformRenderer.position = _startPosition + l_PositionOffset + l_rotationPosition * l_position;
+
+            Debug.DrawRay(_startPosition + l_PositionOffset, l_rotationPosition * l_position * 3, Color.red);
+        }
+
+        private void UpdateStuck() { }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick States
+
+        private void TickSpawn()
+        {
+            
+        }
+
+        private void TickStartMove() => SetMove();
+
+        private void TickMove()
+        {
+            ChangeOrientation(_direction);
+            _rotationAxis = Quaternion.AngleAxis(ROTATION, Vector3.up) * _direction * ROTATION;
+            UpdateNextPositionAndRotation();
+        }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Utilities
-        private void CorrectY()
+
+        private void UpdateRotationProperties()
         {
-            float x = (m_transform.position - _endPosition).magnitude;
-            Vector3 lCorrector = Vector3.up * _positionCorrector * Mathf.Abs(Mathf.Sin(x * Mathf.PI));
-            _transformRenderer.position = m_transform.position + Vector3.up * .5f + lCorrector;
+            _startRotation = _endRotation;
+            _endRotation = Quaternion.AngleAxis(ROTATION, _rotationAxis) * _startRotation;
+
+            _startRotationPosition = Quaternion.identity;
+            _endRotationPosition = Quaternion.AngleAxis(ROTATION, _rotationAxis) * _startRotationPosition;
         }
 
-        private void UpdatePositionsAndRotation()
+        private void UpdateNextPositionAndRotation()
         {
             _startPosition = _endPosition;
             _endPosition = _startPosition + _direction;
-        }
 
-        private void UpdatePositionsAndDirection(Vector3 pDirection)
-        {
-            _direction = pDirection.normalized;
-            ChangeOrientation(_direction);
-            _rotationAxis = Quaternion.AngleAxis(ROTATION, Vector3.up) * _direction * ROTATION;
-            UpdatePositionsAndRotation();
+            UpdateRotationProperties();
+
+            m_transform.position = _endPosition;
         }
 
         private void ChangeOrientation(Vector3 pDirection)
         {
+            _direction = pDirection.normalized;
             Quaternion rotation = _transformRenderer.rotation;
             m_transform.rotation = Quaternion.LookRotation(pDirection.normalized);
             _transformRenderer.rotation = rotation;
         }
 
-        private void test()
-        {
+        private void ChangeOrientation() => ChangeOrientation(_direction);
 
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setters
+
+        private void SetCurve()
+        {
+            if (_curveMove != null) return;
+            _curveMove = new AnimationCurve();
+            _curveMove.AddKey(0, 0);
+            _curveMove.AddKey(1, 1);
         }
+
+        public void SetRenderer(Transform pTransform) => _transformRenderer = pTransform;
     }
 }
