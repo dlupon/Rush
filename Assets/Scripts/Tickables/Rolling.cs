@@ -1,13 +1,7 @@
-using DG.Tweening;
 using System;
 using UnityEngine;
+using Com.UnBocal.Rush.Utilities;
 using Com.UnBocal.Rush.Properties;
-using UnityEngine.Events;
-using UnityEngine.UIElements;
-using TMPro;
-using Unity.VisualScripting;
-using UnityEditor.UIElements;
-
 
 namespace Com.UnBocal.Rush.Tickables
 {
@@ -15,6 +9,7 @@ namespace Com.UnBocal.Rush.Tickables
     public class Rolling : Tickable
     {
         public Vector3 Direction { get => _direction; }
+        public Vector3 ConveyorDirection { get => _conveyorDirection; }
 
         // Components
         [SerializeField] private Transform _transformRenderer = null;
@@ -28,7 +23,6 @@ namespace Com.UnBocal.Rush.Tickables
         private Action OnTick;
 
         // Rotation
-        [SerializeField] private int _lineNumber = 10;
         public const float ROTATION = 90f;
         private Vector3 _rotationAxis;
 
@@ -39,19 +33,24 @@ namespace Com.UnBocal.Rush.Tickables
         private Quaternion _endRotationPosition;
         // Movements
         private Vector3 _direction = Vector3.forward;
-        private Vector3 _startPosition, _endPosition = Vector3.zero;
+        private Vector3 _conveyorOffset = Vector3.up * .5f;
+        private Vector3 _conveyorDirection = Vector3Int.forward;
+        private Vector3 _startPosition, _endPosition = Vector3Int.zero;
 
-        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
-        private void Start()
-        {
-            _endPosition = m_transform.position;
-            _direction = m_transform.forward;
-            SetCurve();
-            SetMove();
-        }
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
 
         private void Update() => OnUpdate();
-        
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
+
+        #region Initialization
+        protected override void OnStart()
+        {
+            SetDefaultMotionProperties();
+            SetCurve();
+            SetStartMove();
+        }
+
         protected override void SetComponents()
         {
             base.SetComponents();
@@ -61,134 +60,185 @@ namespace Com.UnBocal.Rush.Tickables
 
         protected override void ConnectEvents()
         {
-            _collisionDetector.CollisionWall.AddListener(WallCollision);
-            _collisionDetector.CollisionArrow.AddListener(WallCollision);
-            _collisionDetector.CollisionCube.AddListener(CubeCollision);
+            _collisionDetector.CollisionWall.AddListener(OnWallCollision);
+            _collisionDetector.CollisionCube.AddListener(OnCubeCollision);
+            _collisionDetector.CollisionArrow.AddListener(OnArrowCollision);
+            _collisionDetector.CollisionStopper.AddListener(OnStopperCollision);
+            _collisionDetector.CollisionConveyor.AddListener(OnConveyorCollision);
             _collisionDetector.Stuck.AddListener(SetStuck);
+            _collisionDetector.OutCollisionConveyor.AddListener(OnConveyorOut);
         }
+        #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
 
+        #region Events
         protected override void Tick() => OnTick();
 
-        private void CubeCollision()
-        {
-            SetSpawn();
-        }
+        private void OnCubeCollision() => SetSpawn();
 
-        private void OnArrowCollision(Vector3 pDirection)
-        {
-            ChangeOrientation(pDirection);
-            SetMove();
-        }
+        private void OnArrowCollision(Vector3 pDirection) => ChangeDirection(pDirection);
 
-        private void WallCollision(Vector3 pDirection) => SetStartMove(pDirection);
+        private void OnWallCollision(Vector3 pDirection) => SetStartMove(pDirection);
 
+        private void OnStopperCollision() => SetStartMove();
+
+        private void OnConveyorCollision(Vector3 pDirection) => SetConveyor(pDirection);
+
+        private void OnConveyorOut() => SetStartMove();
+        #endregion
+        
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
-        private void SetSpawn()
-        {
-            OnUpdate = UpdateStuck;
-            OnTick = TickSpawn;
-        }
+        
+        #region Set States
+        private void SetSpawn() { OnUpdate = UpdateStuck; OnTick = TickSpawn; }
 
-        private void SetStartMove() => SetStartMove(m_transform.forward);
+        private void SetStartMove() => SetStartMove(_direction);
 
         private void SetStartMove(Vector3 pDirection)
         {
-            WaitFor(2);
-            _direction = pDirection;
+            m_tickListerner.WaitFor(1);
+
+            ChangeDirection(pDirection);
             OnUpdate = UpdateStuck;
             OnTick = TickStartMove;
         }
 
         private void SetMove()
         {
-            ChangeOrientation();
-            UpdateRotationProperties();
-            TickMove();
+            UpdateNextPositionAndRotation();
             OnTick = TickMove;
             OnUpdate = UpdateMove;
         }
 
-        private void SetStuck()
+        private void SetConveyor(Vector3 pDirection)
         {
-            OnUpdate = UpdateStuck;
-            OnTick = UpdateStuck;
+            _conveyorDirection = pDirection.Round();
+            OnTick = TickConveyor;
+            OnUpdate = UpdateConveyor;
         }
 
-        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update States
+        private void SetStuck() => SetStuck(0);
 
+        private void SetStuck(int pWaitTick)
+        {
+            WaitFor(pWaitTick);
+            OnUpdate = UpdateStuck;
+            OnTick = SetStartMove;
+        }
+        #endregion
+        
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update States
+        
+        #region Updates Stats
         private void UpdateMove()
         {
-            Vector3 l_position = -(_direction + Vector3.down).normalized * Mathf.Sqrt(2) * .5f;
+            // l_positionOffset = Offset Position Of The Cube From The Rotation Axis
+
+            // We Need All Thoses Fixes Because The Animation Curve Could Give You A Value Under 0 Or Above 1
+            // l_ratioOutofBounds = Used To Fix Isues Created By The Ratio When It's Above Or Equase to 1
+            // l_ratio = Fixed Ratio + Modified By The Animation Cuve
+            // l_PositionMultiplyer = Determines How Much The Cube Is Offseted From The End Position
+
+            // l_PositionOffset = Fixes The Position Based On The Animation Curve
+
+            // l_rotationPosition 1 => Rotation That Can Go Under 0 Without Weird Visual (Animation Curve)
+            //                    2 => Rotation That Can Go Above 1 Without Weird Visual (Animation Curve)
+            //                    3 => Default Rotation
+
+            Vector3 l_positionOffset = -(_direction + Vector3.down).normalized * Mathf.Sqrt(2) * .5f;
             bool l_ratioOutofBounds = Game.Properties.TickRatio >= 1f;
             float l_ratio = l_ratioOutofBounds ? 1 : _curveMove.Evaluate(Game.Properties.TickRatio);
             float l_PositionMultiplyer = Mathf.Floor(l_ratio);
             Vector3 l_PositionOffset = _direction * ((l_ratioOutofBounds ? 0 : l_PositionMultiplyer) + .5f);
 
+            // Lerp Cube Position
             Quaternion l_rotationCube = Quaternion.LerpUnclamped(_startRotation, _endRotation, l_ratio);
-
+            // Lerp Cube Rotation
             Quaternion l_rotationPosition = l_ratio < 0 ?
                 Quaternion.LerpUnclamped(_endRotationPosition, _startRotationPosition, -l_ratio) :                  // Under 0
                 l_ratio > 1 ? Quaternion.LerpUnclamped(_startRotationPosition, _endRotationPosition, l_ratio - 1) : // Above 1
                 Quaternion.Lerp(_startRotationPosition, _endRotationPosition, l_ratio);                             // Between 0 And 1
 
+            // Apply Lerps
             _transformRenderer.rotation = l_rotationCube;
-            _transformRenderer.position = _startPosition + l_PositionOffset + l_rotationPosition * l_position;
+            _transformRenderer.position = _startPosition + l_PositionOffset + l_rotationPosition * l_positionOffset;
 
-            Debug.DrawRay(_startPosition + l_PositionOffset, l_rotationPosition * l_position * 3, Color.red);
+            // Debug
+            Debug.DrawRay(_startPosition + l_PositionOffset, l_rotationPosition * l_positionOffset * 3, Color.red);
+        }
+
+        private void UpdateConveyor()
+        {
+            _transformRenderer.position = _conveyorOffset + Vector3.Lerp(_startPosition, _endPosition, Game.Properties.TickRatio);
         }
 
         private void UpdateStuck() { }
+        #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick States
 
-        private void TickSpawn()
-        {
-            
-        }
+        #region Tick States
+        private void TickSpawn() { }
 
         private void TickStartMove() => SetMove();
 
-        private void TickMove()
-        {
-            ChangeOrientation(_direction);
-            _rotationAxis = Quaternion.AngleAxis(ROTATION, Vector3.up) * _direction * ROTATION;
-            UpdateNextPositionAndRotation();
-        }
+        private void TickMove() => UpdateNextPositionAndRotation();
+
+        private void TickConveyor() => UpdatenextPosition(_conveyorDirection);
+
+        #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Utilities
 
-        private void UpdateRotationProperties()
+        #region Utilities
+        private void UpdatenextPosition(Vector3 pDirection)
         {
+            // Update Position
+            _startPosition = _endPosition;
+            _endPosition = _startPosition + pDirection.Round();
+
+            // Apply The Movement
+            m_transform.position = _endPosition;
+        }
+
+        private void UpdateNextRotation()
+        {
+            // Update Rotation
             _startRotation = _endRotation;
             _endRotation = Quaternion.AngleAxis(ROTATION, _rotationAxis) * _startRotation;
 
+            // Update Rotation For The Position Offset
             _startRotationPosition = Quaternion.identity;
             _endRotationPosition = Quaternion.AngleAxis(ROTATION, _rotationAxis) * _startRotationPosition;
         }
 
-        private void UpdateNextPositionAndRotation()
+        private void UpdateNextPositionAndRotation() => UpdateNextPositionAndRotation(_direction);
+
+        private void UpdateNextPositionAndRotation(Vector3 pDirection)
         {
-            _startPosition = _endPosition;
-            _endPosition = _startPosition + _direction;
-
-            UpdateRotationProperties();
-
-            m_transform.position = _endPosition;
+            UpdatenextPosition(pDirection.normalized);
+            UpdateNextRotation();
         }
 
-        private void ChangeOrientation(Vector3 pDirection)
+        private void ChangeDirection() => ChangeDirection(_direction);
+
+        private void ChangeDirection(Vector3 pDirection)
         {
             _direction = pDirection.normalized;
-            Quaternion rotation = _transformRenderer.rotation;
-            m_transform.rotation = Quaternion.LookRotation(pDirection.normalized);
-            _transformRenderer.rotation = rotation;
+            _rotationAxis = Quaternion.AngleAxis(ROTATION, Vector3.up) * _direction;
         }
-
-        private void ChangeOrientation() => ChangeOrientation(_direction);
+        #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setters
+
+        #region Setters
+        private void SetDefaultMotionProperties()
+        {
+            _endPosition = _startPosition = m_transform.position.Round(); ;
+            _endRotation = _startRotation = _transformRenderer.rotation;
+            _direction = m_transform.forward;
+        }
 
         private void SetCurve()
         {
@@ -199,5 +249,6 @@ namespace Com.UnBocal.Rush.Tickables
         }
 
         public void SetRenderer(Transform pTransform) => _transformRenderer = pTransform;
+        #endregion
     }
 }

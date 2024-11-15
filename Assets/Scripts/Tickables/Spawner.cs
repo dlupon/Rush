@@ -23,7 +23,7 @@ namespace Com.UnBocal.Rush.Tickables
         [SerializeField] private bool _isCube = false;
         private int _spawningCount = 0;
 
-        private void Start()
+        protected override void OnStart()
         {
             GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
         }
@@ -49,8 +49,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void SpawnCube()
         {
-            Transform _currentCube = Instantiate(_cubeFactory).transform;
-            _currentCube.position = m_transform.position;
+            Transform _currentCube = Instantiate(_cubeFactory, transform.position, transform.rotation).transform;
             _currentCube.rotation = Quaternion.AngleAxis(90f * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.rotation;
             _currentCube.GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
         }

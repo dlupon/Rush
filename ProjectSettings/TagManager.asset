@@ -7,6 +7,10 @@ TagManager:
   - Tile
   - Spawner
   - Arrow
+  - Stopper
+  - Teleporter
+  - Switch
+  - Conveyor
   layers:
   - Default
   - TransparentFX

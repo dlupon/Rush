@@ -119,12 +119,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a88a4e594d40c084fabc2929f8e51f14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _gameObject: {fileID: 0}
   _transformRenderer: {fileID: 8940061603734361741}
   _meshRenderer: {fileID: 341213795785940758}
   _materialColors: {fileID: 2100000, guid: 9119ba892272e1943b28d1b9f900a1ef, type: 2}
   _cubeFactory: {fileID: 4025685777736603955, guid: e8d2e7bb0e321794b842446874d8d2b8, type: 3}
   _spawningRate: 01000000
-  _isCube: 0
+  _isCube: 1
 --- !u!114 &7093874795395929903
 MonoBehaviour:
   m_ObjectHideFlags: 0

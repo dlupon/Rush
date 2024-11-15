@@ -11,11 +11,7 @@ namespace Com.UnBocal.Rush.Managers
     {
         // Ticks
         [SerializeField] private float _tickPerSecond = 1;
-        private const int TICK_PER_SECOND = 8;
-        private float _tickIntervalTarget = default;
-        private float _tickInterval = default;
         private int _tickCount = default;
-        private bool _isTicking = false;
 
         private const float TICK_DURATION = 1f;
         private float _tickRatio = 0f;
@@ -23,18 +19,12 @@ namespace Com.UnBocal.Rush.Managers
 
         private void Start() => StartTicking();
 
-
-
         private void Update()
         {
             Ticking();
         }
 
-        private void StartTicking()
-        {
-            _isTicking = true;
-            ResetTick();
-        }
+        private void StartTicking() => ResetTick();
 
         private void ResetTick()
         {

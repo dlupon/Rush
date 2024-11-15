@@ -10,10 +10,12 @@ namespace Com.UnBocal.Rush.Tickables
         public UnityEvent LocalTick = new UnityEvent();
 
         // Getters
+        public bool IsTicking { get => _isTicking; }
         public bool IsListening { get => _isListening; }
         public int TickLeft { get => _tickLeft; }
 
         // Tick
+        private bool _isTicking = false;
         private bool _isListening = true;
         private int _tickLeft = 0;
 
@@ -29,12 +31,16 @@ namespace Com.UnBocal.Rush.Tickables
 
         private bool CanTick()
         {
-            if (!_isListening) return false;
-            if (--_tickLeft > 0) return false;
-            return true;
+            if (_tickLeft-- > 0) return _isTicking = false;
+            return _isTicking = true;
         }
 
-        public void WaitFor(int pTickCount) => _tickLeft = pTickCount;
+        public void WaitFor(int pTickCount)
+        {
+            _tickLeft = pTickCount;
+            if (_tickLeft < 1) return;
+            _isTicking = false;
+        }
 
         public void WaitFor() => WaitFor(1);
 

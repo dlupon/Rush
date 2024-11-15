@@ -43,7 +43,7 @@ GameObject:
   - component: {fileID: 2400296309198809871}
   - component: {fileID: 7040206417630347058}
   m_Layer: 0
-  m_Name: Arrow
+  m_Name: Teleporter
   m_TagString: Arrow
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

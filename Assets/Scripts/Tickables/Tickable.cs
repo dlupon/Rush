@@ -17,12 +17,12 @@ namespace Com.UnBocal.Rush.Tickables
         private int _tickLeft = 0;
 
 
-        private void Awake()
+        private void Start()
         {
             SetComponents();
             SetTickEvents();
             ConnectEvents();
-            OnAwake();
+            OnStart();
         }
 
         protected virtual void SetComponents() { m_tickListerner = GetComponent<TickListener>(); TryGetComponent(out m_debugTools); m_transform = transform; }
@@ -31,18 +31,18 @@ namespace Com.UnBocal.Rush.Tickables
             m_tickListerner.LocalTick.AddListener(OnTick);
         }
 
-        protected virtual void OnAwake() { }
+        protected virtual void OnStart() { }
+
         protected virtual void ConnectEvents() { }
+
         private void OnTick()
         {
-            if (--_tickLeft > 0) return;
+            if (_tickLeft-- > 0) return;
+            if (!m_tickListerner.IsTicking) return;
             Tick();
         }
-        protected virtual void Tick()
-        {
-        
-        }
-        protected virtual void LateTick() { }
+
+        protected virtual void Tick() { }
 
         protected void SetText(string ptext)
         {
