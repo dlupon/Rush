@@ -60,6 +60,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             if (!LaunchRaycast(_groundDirection)) return;
             ResetGroundOnlyProperties();
+            if (CubeDidntMove()) return;
             // Cube Behavior Based on The Collision
             switch (_hit.collider.tag)
             {
@@ -80,7 +81,6 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void OnCollisionSwitch()
         {
-            if (CubeDidntMove()) return;
             if (!_hit.collider.TryGetComponent(out Switch l_switch)) return;
             Quaternion l_rotation = Quaternion.AngleAxis(Rolling.ROTATION * l_switch.Orientation, Vector3.up);
             CollisionArrow.Invoke(l_rotation * _rolling.Direction);
@@ -88,7 +88,6 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void OnCollisionStopper()
         {
-            WaitFor(1); // No Needs To Check Collision For The Next Tick
             CollisionStopper.Invoke();
         }
 

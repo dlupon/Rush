@@ -31,7 +31,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private bool CanTick()
         {
-            if (_tickLeft-- > 0) return _isTicking = false;
+            if (--_tickLeft > 0) return _isTicking = false;
             return _isTicking = true;
         }
 

@@ -100,8 +100,8 @@ namespace Com.UnBocal.Rush.Tickables
             m_tickListerner.WaitFor(1);
 
             ChangeDirection(pDirection);
+            OnTick = SetMove;
             OnUpdate = UpdateStuck;
-            OnTick = TickStartMove;
         }
 
         private void SetMove()
