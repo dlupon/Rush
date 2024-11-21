@@ -44,6 +44,8 @@ namespace Com.UnBocal.Rush.Tickables
 
         public void WaitFor() => WaitFor(1);
 
+        public void ResetWaitTick() => WaitFor(0);
+
         public void SetTicking(bool pIsListening = true) => _isListening = pIsListening;
     }
 }

@@ -1,9 +1,5 @@
 using Com.UnBocal.Rush.Properties;
-using System.Collections;
-using System.Linq;
-using UnityEditor.Rendering;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Com.UnBocal.Rush.Managers
 {

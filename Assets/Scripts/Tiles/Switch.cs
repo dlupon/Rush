@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 public class Switch : MonoBehaviour
 {
@@ -10,8 +7,7 @@ public class Switch : MonoBehaviour
 
     private float SwitchOrientation()
     {
-        print(_orintantation);
         _orintantation *= -1;
-        return _orintantation;
+        return _orintantation * -1f;
     }
 }

@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using Com.UnBocal.Rush.Utilities;
 using Com.UnBocal.Rush.Properties;
+using Unity.VisualScripting;
+using DG.Tweening;
 
 namespace Com.UnBocal.Rush.Tickables
 {
@@ -46,6 +48,14 @@ namespace Com.UnBocal.Rush.Tickables
         #region Initialization
         protected override void OnStart()
         {
+            bool MyBool = true;
+            if (!(!(!(!(!(!(!(!(!(!(!(!(!(MyBool))))))))))))))
+            {
+                
+            }
+
+
+
             SetDefaultMotionProperties();
             SetCurve();
             SetStartMove();
@@ -64,9 +74,12 @@ namespace Com.UnBocal.Rush.Tickables
             _collisionDetector.CollisionCube.AddListener(OnCubeCollision);
             _collisionDetector.CollisionArrow.AddListener(OnArrowCollision);
             _collisionDetector.CollisionStopper.AddListener(OnStopperCollision);
+            _collisionDetector.CollisionTeleporter.AddListener(OnTeleporterCollision);
             _collisionDetector.CollisionConveyor.AddListener(OnConveyorCollision);
             _collisionDetector.Stuck.AddListener(SetStuck);
             _collisionDetector.OutCollisionConveyor.AddListener(OnConveyorOut);
+            _collisionDetector.Falling.AddListener(OnFalling);
+            _collisionDetector.Land.AddListener(OnLand);
         }
         #endregion
 
@@ -75,21 +88,31 @@ namespace Com.UnBocal.Rush.Tickables
         #region Events
         protected override void Tick() => OnTick();
 
-        private void OnCubeCollision() => SetSpawn();
+        private void OnCubeCollision()
+        {
+            m_transform.DOKill();
+            m_transform.DOShakeRotation(1f, 20f).SetEase(Ease.OutExpo);
+        }
 
         private void OnArrowCollision(Vector3 pDirection) => ChangeDirection(pDirection);
 
         private void OnWallCollision(Vector3 pDirection) => SetStartMove(pDirection);
 
         private void OnStopperCollision() => SetStartMove();
+        
+        private void OnTeleporterCollision(Vector3 p_newPosition) => ChangeStartPotition(p_newPosition);
 
         private void OnConveyorCollision(Vector3 pDirection) => SetConveyor(pDirection);
 
         private void OnConveyorOut() => SetStartMove();
+
+        private void OnFalling() => SetFalling();
+
+        private void OnLand() => SetStartMove();
         #endregion
-        
+
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
-        
+
         #region Set States
         private void SetSpawn() { OnUpdate = UpdateStuck; OnTick = TickSpawn; }
 
@@ -113,9 +136,10 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void SetConveyor(Vector3 pDirection)
         {
+            m_tickListerner.ResetWaitTick();
             _conveyorDirection = pDirection.Round();
             OnTick = TickConveyor;
-            OnUpdate = UpdateConveyor;
+            OnUpdate = UpdateSlide;
         }
 
         private void SetStuck() => SetStuck(0);
@@ -126,6 +150,13 @@ namespace Com.UnBocal.Rush.Tickables
             OnUpdate = UpdateStuck;
             OnTick = SetStartMove;
         }
+
+        private void SetFalling()
+        {
+            OnTick = TickFalling;
+            OnUpdate = UpdateSlide;
+        }
+
         #endregion
         
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update States
@@ -160,7 +191,7 @@ namespace Com.UnBocal.Rush.Tickables
                 l_ratio > 1 ? Quaternion.LerpUnclamped(_startRotationPosition, _endRotationPosition, l_ratio - 1) : // Above 1
                 Quaternion.Lerp(_startRotationPosition, _endRotationPosition, l_ratio);                             // Between 0 And 1
 
-            // Apply Lerps
+            // Apply Lerps 
             _transformRenderer.rotation = l_rotationCube;
             _transformRenderer.position = _startPosition + l_PositionOffset + l_rotationPosition * l_positionOffset;
 
@@ -168,7 +199,7 @@ namespace Com.UnBocal.Rush.Tickables
             Debug.DrawRay(_startPosition + l_PositionOffset, l_rotationPosition * l_positionOffset * 3, Color.red);
         }
 
-        private void UpdateConveyor()
+        private void UpdateSlide()
         {
             _transformRenderer.position = _conveyorOffset + Vector3.Lerp(_startPosition, _endPosition, Game.Properties.TickRatio);
         }
@@ -177,7 +208,6 @@ namespace Com.UnBocal.Rush.Tickables
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick States
-
         #region Tick States
         private void TickSpawn() { }
 
@@ -187,10 +217,11 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void TickConveyor() => UpdatenextPosition(_conveyorDirection);
 
+        private void TickFalling() => UpdatenextPosition(Vector3.down);
+
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Utilities
-
         #region Utilities
         private void UpdatenextPosition(Vector3 pDirection)
         {
@@ -228,14 +259,19 @@ namespace Com.UnBocal.Rush.Tickables
             _direction = pDirection.normalized;
             _rotationAxis = Quaternion.AngleAxis(ROTATION, Vector3.up) * _direction;
         }
+
+        private void ChangeStartPotition(Vector3 p_newPosition)
+        {
+            SetStuck(2);
+            _endPosition = p_newPosition;
+        }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setters
-
         #region Setters
         private void SetDefaultMotionProperties()
         {
-            _endPosition = _startPosition = m_transform.position.Round(); ;
+            _endPosition = _startPosition = m_transform.position;// .Round(); ;
             _endRotation = _startRotation = _transformRenderer.rotation;
             _direction = m_transform.forward;
         }

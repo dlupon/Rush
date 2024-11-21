@@ -10,7 +10,7 @@ namespace Com.UnBocal.Rush.Tickables
     public class Spawner : Tickable
     {
         // Components
-        [SerializeField] private GameObject _gameObject;
+        private GameObject _gameObject;
         [SerializeField] private Transform _transformRenderer;
         [SerializeField] private MeshRenderer _meshRenderer;
 
@@ -45,6 +45,7 @@ namespace Com.UnBocal.Rush.Tickables
                 else SpawnCube();
             }
             _spawningCount++;
+            WaitFor(2);
         }
 
         private void SpawnCube()
@@ -56,6 +57,7 @@ namespace Com.UnBocal.Rush.Tickables
     
         private void SetAsCube()
         {
+            m_transform.DOScale(Vector3.one, 1f).SetEase(Ease.OutBack);
             Rolling _rollingComponent = _gameObject.AddComponent<Rolling>();
             _rollingComponent.SetRenderer(_transformRenderer);
             Destroy(this);
