@@ -1,8 +1,6 @@
 using DG.Tweening;
 using System;
 using UnityEngine;
-using Com.UnBocal.Rush.Properties;
-using UnityEngine.Events;
 
 
 namespace Com.UnBocal.Rush.Tickables
@@ -14,6 +12,9 @@ namespace Com.UnBocal.Rush.Tickables
         [SerializeField] private Transform _transformRenderer;
         [SerializeField] private MeshRenderer _meshRenderer;
 
+        // Tick
+        private Action OnTick;
+
         // Materials
         [SerializeField] private Material _materialColors;
 
@@ -23,9 +24,16 @@ namespace Com.UnBocal.Rush.Tickables
         [SerializeField] private bool _isCube = false;
         private int _spawningCount = 0;
 
+        // Recovery
+        private Vector3 _recoveryPosition;
+        private Quaternion _recoveryRotation;
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         protected override void OnStart()
         {
             GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
+            SetRecoveryProperties();
+            Setpause();
         }
 
         protected override void SetComponents()
@@ -34,11 +42,13 @@ namespace Com.UnBocal.Rush.Tickables
             _gameObject = gameObject;
         }
 
-        protected override void Tick() => Spawn();
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
+        #region Tick
+        protected override void Tick() => OnTick();
 
         private void Spawn()
         {
-            if (_spawningCount >= _spawningRate.Length) return;
+            if (_spawningCount >= _spawningRate.Length) { StopSpawning();  return; }
             if (_spawningRate[_spawningCount] != 0)
             {
                 if (_spawningCount == _spawningRate.Length - 1 && _isCube) SetAsCube();
@@ -48,6 +58,11 @@ namespace Com.UnBocal.Rush.Tickables
             WaitFor(2);
         }
 
+        private void Wait() { }
+        #endregion
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Spawn
+        #region Spawn
         private void SpawnCube()
         {
             Transform _currentCube = Instantiate(_cubeFactory, m_transform.position, transform.rotation).transform;
@@ -58,9 +73,56 @@ namespace Com.UnBocal.Rush.Tickables
         private void SetAsCube()
         {
             m_transform.DOScale(Vector3.one, 1f).SetEase(Ease.OutBack);
+
+            CollisionDetector _CollisionComponent = _gameObject.AddComponent<CollisionDetector>();
             Rolling _rollingComponent = _gameObject.AddComponent<Rolling>();
             _rollingComponent.SetRenderer(_transformRenderer);
-            Destroy(this);
+
+            _CollisionComponent.SetDeleteOnStopRunning(true);
+            _rollingComponent.SetDeleteOnStopRunning(true);
+            StopSpawning();
         }
+        #endregion
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // On Running
+        #region On Running
+        protected override void OnStopRunning() => Setpause();
+
+        protected override void OnRunning() => SetSpawn();
+        #endregion
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
+        #region Set States
+        private void Setpause()
+        {
+            Recovery();
+            OnTick = Wait;
+        }
+
+        private void SetSpawn()
+        {
+            m_transform.position = _recoveryPosition;
+            m_transform.rotation = _recoveryRotation;
+            _spawningCount = 0;
+            OnTick = Spawn;
+        }
+
+        private void StopSpawning() => OnTick = Wait;
+        #endregion
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Recovery
+        #region Recovery
+        private void SetRecoveryProperties()
+        {
+            _recoveryPosition = m_transform.position;
+            _recoveryRotation = m_transform.rotation;
+        }
+
+        private void Recovery()
+        {
+            m_transform.DOMove(_recoveryPosition, 1f).SetEase(Ease.OutExpo);
+            m_transform.DORotate(_recoveryRotation.eulerAngles, 1f).SetEase(Ease.OutExpo);
+        }
+        #endregion
     }
 }

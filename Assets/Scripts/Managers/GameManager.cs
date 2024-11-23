@@ -1,18 +1,34 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Com.UnBocal.Rush.Properties;
+using UnityEngine.AI;
 
-public class GameManager : MonoBehaviour
+namespace Com.UnBocal.Rush.Managers
 {
-    // Start is called before the first frame update
-    void Start()
+    public class GameManager : MonoBehaviour
     {
-        
-    }
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
+        private void Awake()
+        {
+            SetComponents();
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        private void Update()
+        {
+            UpdateInput();
+        }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Inputs
+        private void UpdateInput()
+        {
+            if (!Game.Inputs.Run) return;
+            Game.Properties.ToggleRunning();
+            print($"RUNNING => {Game.Properties.Running}");
+        }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setters
+        private void SetComponents()
+        {
+
+        }
     }
 }

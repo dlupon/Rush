@@ -4,10 +4,10 @@ using UnityEngine.Events;
 
 namespace Com.UnBocal.Rush.Tickables
 {
-    public class TickListener : MonoBehaviour
+    public class EventListener : MonoBehaviour
     {
         // Event
-        public UnityEvent LocalTick = new UnityEvent();
+        [HideInInspector] public UnityEvent LocalTick = new UnityEvent();
 
         // Getters
         public bool IsTicking { get => _isTicking; }
@@ -19,9 +19,21 @@ namespace Com.UnBocal.Rush.Tickables
         private bool _isListening = true;
         private int _tickLeft = 0;
 
-        private void Start() => SetTickEvents();
+        // Running
+        [SerializeField] private bool _destroyOnStopRunning = false;
 
-        private void SetTickEvents() => Game.Signals.Tick.AddListener(Tick);
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
+        private void Start() => ConnectEvents();
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
+        private void ConnectEvents()
+        {
+            Game.Events.Tick.AddListener(Tick);
+            Game.Events.StopRunning.AddListener(OnStopRunning);
+        }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
+        #region Tick
 
         private void Tick()
         {
@@ -47,5 +59,20 @@ namespace Com.UnBocal.Rush.Tickables
         public void ResetWaitTick() => WaitFor(0);
 
         public void SetTicking(bool pIsListening = true) => _isListening = pIsListening;
+        #endregion
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Running
+        #region Running
+        private void OnStopRunning()
+        {
+            TryDestroy();
+        }
+
+        private void TryDestroy()
+        {
+            if (!_destroyOnStopRunning) return;
+            Destroy(gameObject);
+        }
+        #endregion
     }
 }

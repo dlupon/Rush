@@ -5,7 +5,6 @@ using DG.Tweening;
 
 namespace Com.UnBocal.Rush.Tickables
 {
-    [RequireComponent(typeof(CollisionDetector))]
     public class Rolling : Tickable
     {
         public Vector3 Direction { get => _direction; }
@@ -39,14 +38,9 @@ namespace Com.UnBocal.Rush.Tickables
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
 
-        private void Update()
-        {
-            OnUpdate();
-            print(OnUpdate.Method);
-        }
+        private void Update() => OnUpdate();
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
-
         #region Initialization
         protected override void OnStart()
         {
@@ -64,6 +58,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         protected override void ConnectEvents()
         {
+            base.ConnectEvents();
             _collisionDetector.CollisionWall.AddListener(OnWallCollision);
             _collisionDetector.CollisionCube.AddListener(OnCubeCollision);
             _collisionDetector.CollisionArrow.AddListener(OnArrowCollision);
@@ -78,20 +73,13 @@ namespace Com.UnBocal.Rush.Tickables
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
-
         #region Events
-        protected override void Tick()
-        {
-            OnTick();
-            print(OnTick.Method);
-
-        }
+        protected override void Tick() => OnTick();
 
         private void OnCubeCollision()
         {
-            m_transform.DOKill();
-            m_transform.DOShakeRotation(1f, 20f).SetEase(Ease.OutExpo);
-            // SetStuck();
+            _transformRenderer.DOKill();
+            _transformRenderer.DOShakeRotation(1f, 20f).SetEase(Ease.OutExpo);
         }
 
         private void OnArrowCollision(Vector3 pDirection) => ChangeDirection(pDirection);
@@ -112,7 +100,6 @@ namespace Com.UnBocal.Rush.Tickables
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
-
         #region Set States
         private void SetSpawn() { OnUpdate = UpdateStuck; OnTick = TickSpawn; }
 

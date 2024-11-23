@@ -1,14 +1,16 @@
 using UnityEngine;
 using Com.UnBocal.Rush.Debugs;
 using Unity.IO.LowLevel.Unsafe;
+using Com.UnBocal.Rush.Properties;
+using Unity.VisualScripting;
 
 namespace Com.UnBocal.Rush.Tickables
 {
-    [RequireComponent(typeof(TickListener))]
+    [RequireComponent(typeof(EventListener))]
     public class Tickable : MonoBehaviour
     {
         // Components
-        protected TickListener m_tickListerner;
+        protected EventListener m_tickListerner;
         protected Transform m_transform;
         protected DebugStateMachin m_debugTools = null;
 
@@ -16,7 +18,10 @@ namespace Com.UnBocal.Rush.Tickables
         protected int m_tickLeft { get => _tickLeft; }
         private int _tickLeft = 0;
 
+        // Running
+        [SerializeField] private bool _deleteOnStopRunning = false;
 
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
         private void Start()
         {
             SetComponents();
@@ -25,7 +30,8 @@ namespace Com.UnBocal.Rush.Tickables
             OnStart();
         }
 
-        protected virtual void SetComponents() { m_tickListerner = GetComponent<TickListener>(); TryGetComponent(out m_debugTools); m_transform = transform; }
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
+        protected virtual void SetComponents() { m_tickListerner = GetComponent<EventListener>(); TryGetComponent(out m_debugTools); m_transform = transform; }
         private void SetTickEvents()
         {
             m_tickListerner.LocalTick.AddListener(OnTick);
@@ -33,8 +39,13 @@ namespace Com.UnBocal.Rush.Tickables
 
         protected virtual void OnStart() { }
 
-        protected virtual void ConnectEvents() { }
+        protected virtual void ConnectEvents()
+        {
+            Game.Events.Running.AddListener(OnRunning);
+            Game.Events.StopRunning.AddListener(PreStopRunning);
+        }
 
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
         private void OnTick()
         {
             if (!m_tickListerner.IsTicking) return;
@@ -44,12 +55,32 @@ namespace Com.UnBocal.Rush.Tickables
 
         protected virtual void Tick() { }
 
-        protected void SetText(string ptext)
+        protected void WaitFor(int pTickNumber) => _tickLeft = pTickNumber;
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Game Running
+        protected virtual void OnRunning()
         {
-            if (m_debugTools == null) return;
-            m_debugTools.SetText(ptext);
+
         }
 
-        protected void WaitFor(int pTickNumber) => _tickLeft = pTickNumber;
+        private void PreStopRunning()
+        {
+            OnStopRunning();
+            Delete();
+        }
+
+        protected virtual void OnStopRunning()
+        {
+
+        }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Delete
+        private void Delete()
+        {
+            if (!_deleteOnStopRunning) return;
+            Destroy(this);
+        }
+
+        public void SetDeleteOnStopRunning(bool pDelete) => _deleteOnStopRunning = pDelete;
     }
 }

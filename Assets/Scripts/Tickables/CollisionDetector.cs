@@ -1,9 +1,6 @@
-using Com.UnBocal.Rush.Properties;
-using DG.Tweening;
-using System.Runtime.InteropServices;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
-using static UnityEngine.Rendering.DebugUI;
 
 
 namespace Com.UnBocal.Rush.Tickables
@@ -43,6 +40,12 @@ namespace Com.UnBocal.Rush.Tickables
 
         // Positions For Switch Tile
         private Vector3 _lastPosition = default;
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+            SetDeleteOnStopRunning(true);
+        }
 
         protected override void SetComponents()
         {

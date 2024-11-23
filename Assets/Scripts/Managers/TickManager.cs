@@ -48,7 +48,7 @@ namespace Com.UnBocal.Rush.Managers
         private void Tick()
         {
             _tickCount++;
-            Game.Signals.Tick.Invoke();
+            Game.Events.Tick.Invoke();
         }
     }
 }

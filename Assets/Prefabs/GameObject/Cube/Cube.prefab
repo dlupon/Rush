@@ -105,6 +105,7 @@ MonoBehaviour:
   LocalTick:
     m_PersistentCalls:
       m_Calls: []
+  _destroyOnStopRunning: 1
 --- !u!114 &460835286577409748
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117,6 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d42aa1b53dd4af443a4c8a0188999d68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _deleteOnStopRunning: 1
   CollisionWall:
     m_PersistentCalls:
       m_Calls: []
@@ -165,6 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fe8d9e9e78341a4587960a527e1867e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _deleteOnStopRunning: 1
   _transformRenderer: {fileID: 3178362261486329042}
   _curveMove:
     serializedVersion: 2

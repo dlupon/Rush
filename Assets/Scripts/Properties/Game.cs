@@ -1,3 +1,4 @@
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -5,8 +6,13 @@ namespace Com.UnBocal.Rush.Properties
 {
     public static class Game
     {
-        public static class Signals
+        public static class Events
         {
+            // Game
+            public static UnityEvent Running = new UnityEvent();
+            public static UnityEvent StopRunning = new UnityEvent();
+
+            // Tick
             public static UnityEvent FirstTick = new UnityEvent();
             public static UnityEvent Tick = new UnityEvent();
             public static UnityEvent DemiTick = new UnityEvent();
@@ -14,13 +20,19 @@ namespace Com.UnBocal.Rush.Properties
 
         public static class Properties
         {
+            #region Variables
             // Getters
+            //  // Game
+            public static bool Running => _running;
             //  // Screen
             public static Vector2Int ScreenSizeWithPixelization => GetScreenSizeWithPixelization();
             public static Vector2Int ScreenSize => GetScreenSize();
             public static float ScreenPixelizedRatio => ScreenSizeWithPixelization.magnitude / ScreenSize.magnitude;
             //  // Tick
             public static float TickRatio => _tickRatio;
+
+            // Game
+            private static bool _running = false;
 
             // Screen Pixelization
             private static Vector2Int _screenSize = Vector2Int.zero;
@@ -29,10 +41,6 @@ namespace Com.UnBocal.Rush.Properties
 
             // Tick
             private static float _tickRatio;
-
-            // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
-            #region tick
-            public static float SetTickRatio(float pTickRatio) => _tickRatio = pTickRatio;
             #endregion
 
             // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Screen
@@ -58,15 +66,42 @@ namespace Com.UnBocal.Rush.Properties
 
             private static Vector2Int GetScreenSizeWithPixelization() => SetScreenPixelization(_screenPizelizationRatio);
             #endregion
-        
+
+            // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
+            #region tick
+            public static float SetTickRatio(float pTickRatio) => _tickRatio = pTickRatio;
+            #endregion
+
+            // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Game
+            #region Game
+            public static bool ToggleRunning() => SetRunning(!_running);
+            public static bool SetRunning(bool pRunning)
+            {
+                _running = pRunning;
+                if (_running) Events.Running.Invoke();
+                else Events.StopRunning.Invoke();
+                return _running;
+            }
+            #endregion
+
         }
 
         public static class Inputs
         {
+            // Inputs
+            private const KeyCode RUN = KeyCode.Space;
+
+            // Keyboard
+            public static bool Run => Input.GetKeyDown(RUN);
+
+            // Mouse
             public static Vector3 MousePosition => GetMousePosition();
 
             private static Vector3 _mousePosition = Vector3.zero;
 
+            // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Keyboard
+
+            // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Mouse
             public static Vector3 GetMousePosition()
             {
                 _mousePosition = Input.mousePosition.normalized; 
@@ -75,7 +110,6 @@ namespace Com.UnBocal.Rush.Properties
         }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Custom Methods
-
         #region Custom Methods
         public static Vector3 Round(this Vector3 pVector)
         {
