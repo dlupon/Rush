@@ -1,8 +1,6 @@
 using System;
 using UnityEngine;
-using Com.UnBocal.Rush.Utilities;
 using Com.UnBocal.Rush.Properties;
-using Unity.VisualScripting;
 using DG.Tweening;
 
 namespace Com.UnBocal.Rush.Tickables
@@ -41,21 +39,17 @@ namespace Com.UnBocal.Rush.Tickables
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
 
-        private void Update() => OnUpdate();
+        private void Update()
+        {
+            OnUpdate();
+            print(OnUpdate.Method);
+        }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
 
         #region Initialization
         protected override void OnStart()
         {
-            bool MyBool = true;
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(MyBool))))))))))))))
-            {
-                
-            }
-
-
-
             SetDefaultMotionProperties();
             SetCurve();
             SetStartMove();
@@ -86,12 +80,18 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
 
         #region Events
-        protected override void Tick() => OnTick();
+        protected override void Tick()
+        {
+            OnTick();
+            print(OnTick.Method);
+
+        }
 
         private void OnCubeCollision()
         {
             m_transform.DOKill();
             m_transform.DOShakeRotation(1f, 20f).SetEase(Ease.OutExpo);
+            // SetStuck();
         }
 
         private void OnArrowCollision(Vector3 pDirection) => ChangeDirection(pDirection);
@@ -160,11 +160,10 @@ namespace Com.UnBocal.Rush.Tickables
         #endregion
         
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update States
-        
         #region Updates Stats
         private void UpdateMove()
         {
-            // l_positionOffset = Offset Position Of The Cube From The Rotation Axis
+            // l_PositionOffsetFromRotationAxis = Offset Position Of The Cube From The Rotation Axis
 
             // We Need All Thoses Fixes Because The Animation Curve Could Give You A Value Under 0 Or Above 1
             // l_ratioOutofBounds = Used To Fix Isues Created By The Ratio When It's Above Or Equase to 1
@@ -177,31 +176,31 @@ namespace Com.UnBocal.Rush.Tickables
             //                    2 => Rotation That Can Go Above 1 Without Weird Visual (Animation Curve)
             //                    3 => Default Rotation
 
-            Vector3 l_positionOffset = -(_direction + Vector3.down).normalized * Mathf.Sqrt(2) * .5f;
+            Vector3 l_PositionOffsetFromRotationAxis = -(_direction + Vector3.down).normalized * Mathf.Sqrt(2) * .5f;
             bool l_ratioOutofBounds = Game.Properties.TickRatio >= 1f;
             float l_ratio = l_ratioOutofBounds ? 1 : _curveMove.Evaluate(Game.Properties.TickRatio);
             float l_PositionMultiplyer = Mathf.Floor(l_ratio);
             Vector3 l_PositionOffset = _direction * ((l_ratioOutofBounds ? 0 : l_PositionMultiplyer) + .5f);
 
-            // Lerp Cube Position
-            Quaternion l_rotationCube = Quaternion.LerpUnclamped(_startRotation, _endRotation, l_ratio);
             // Lerp Cube Rotation
+            Quaternion l_rotationCube = Quaternion.LerpUnclamped(_startRotation, _endRotation, l_ratio);
+            // Lerp Cube Position 
             Quaternion l_rotationPosition = l_ratio < 0 ?
                 Quaternion.LerpUnclamped(_endRotationPosition, _startRotationPosition, -l_ratio) :                  // Under 0
                 l_ratio > 1 ? Quaternion.LerpUnclamped(_startRotationPosition, _endRotationPosition, l_ratio - 1) : // Above 1
                 Quaternion.Lerp(_startRotationPosition, _endRotationPosition, l_ratio);                             // Between 0 And 1
 
             // Apply Lerps 
-            _transformRenderer.rotation = l_rotationCube;
-            _transformRenderer.position = _startPosition + l_PositionOffset + l_rotationPosition * l_positionOffset;
+            m_transform.rotation = l_rotationCube;
+            m_transform.position = _startPosition + l_PositionOffset + l_rotationPosition * l_PositionOffsetFromRotationAxis;
 
             // Debug
-            Debug.DrawRay(_startPosition + l_PositionOffset, l_rotationPosition * l_positionOffset * 3, Color.red);
+            Debug.DrawRay(_startPosition + l_PositionOffset, l_rotationPosition * l_PositionOffsetFromRotationAxis, Color.red);
         }
 
         private void UpdateSlide()
         {
-            _transformRenderer.position = _conveyorOffset + Vector3.Lerp(_startPosition, _endPosition, Game.Properties.TickRatio);
+            m_transform.position = _conveyorOffset + Vector3.Lerp(_startPosition, _endPosition, Game.Properties.TickRatio);
         }
 
         private void UpdateStuck() { }
@@ -215,15 +214,14 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void TickMove() => UpdateNextPositionAndRotation();
 
-        private void TickConveyor() => UpdatenextPosition(_conveyorDirection);
+        private void TickConveyor() => UpdateNextPosition(_conveyorDirection);
 
-        private void TickFalling() => UpdatenextPosition(Vector3.down);
-
+        private void TickFalling() => UpdateNextPosition(Vector3.down);
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Utilities
         #region Utilities
-        private void UpdatenextPosition(Vector3 pDirection)
+        private void UpdateNextPosition(Vector3 pDirection)
         {
             // Update Position
             _startPosition = _endPosition;
@@ -248,7 +246,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void UpdateNextPositionAndRotation(Vector3 pDirection)
         {
-            UpdatenextPosition(pDirection.normalized);
+            UpdateNextPosition(pDirection.normalized);
             UpdateNextRotation();
         }
 
@@ -271,8 +269,8 @@ namespace Com.UnBocal.Rush.Tickables
         #region Setters
         private void SetDefaultMotionProperties()
         {
-            _endPosition = _startPosition = m_transform.position;// .Round(); ;
-            _endRotation = _startRotation = _transformRenderer.rotation;
+            _endPosition = _startPosition = m_transform.position + Vector3.down * .5f;
+            _endRotation = _startRotation = m_transform.rotation;
             _direction = m_transform.forward;
         }
 

@@ -50,7 +50,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void SpawnCube()
         {
-            Transform _currentCube = Instantiate(_cubeFactory, transform.position, transform.rotation).transform;
+            Transform _currentCube = Instantiate(_cubeFactory, m_transform.position, transform.rotation).transform;
             _currentCube.rotation = Quaternion.AngleAxis(90f * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.rotation;
             _currentCube.GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
         }

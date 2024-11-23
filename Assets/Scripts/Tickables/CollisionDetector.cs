@@ -11,30 +11,32 @@ namespace Com.UnBocal.Rush.Tickables
     public class CollisionDetector : Tickable
     {
         // Event
-        public UnityEvent<Vector3> CollisionWall = new UnityEvent<Vector3>();
-        public UnityEvent<Vector3> CollisionArrow = new UnityEvent<Vector3>();
-        public UnityEvent<Vector3> CollisionTeleporter = new UnityEvent<Vector3>();
-        public UnityEvent CollisionSwitch = new UnityEvent();
-        public UnityEvent CollisionStopper = new UnityEvent();
-        public UnityEvent<Vector3> CollisionConveyor = new UnityEvent<Vector3>();
-        public UnityEvent OutCollisionConveyor = new UnityEvent();
-        public UnityEvent CollisionCube = new UnityEvent();
-        public UnityEvent Stuck = new UnityEvent();
-        public UnityEvent Falling = new UnityEvent();
-        public UnityEvent Land = new UnityEvent();
+        [HideInInspector] public UnityEvent<Vector3> CollisionWall = new UnityEvent<Vector3>();
+        [HideInInspector] public UnityEvent<Vector3> CollisionArrow = new UnityEvent<Vector3>();
+        [HideInInspector] public UnityEvent<Vector3> CollisionTeleporter = new UnityEvent<Vector3>();
+        [HideInInspector] public UnityEvent CollisionSwitch = new UnityEvent();
+        [HideInInspector] public UnityEvent CollisionStopper = new UnityEvent();
+        [HideInInspector] public UnityEvent<Vector3> CollisionConveyor = new UnityEvent<Vector3>();
+        [HideInInspector] public UnityEvent OutCollisionConveyor = new UnityEvent();
+        [HideInInspector] public UnityEvent CollisionCube = new UnityEvent();
+        [HideInInspector] public UnityEvent Stuck = new UnityEvent();
+        [HideInInspector] public UnityEvent Falling = new UnityEvent();
+        [HideInInspector] public UnityEvent Land = new UnityEvent();
 
         // Components
         private Collider _collider;
         private Rolling _rolling;
 
         // Collosion
+        [SerializeField] public LayerMask _collisionLayer = 64;
+        private const float _FALLING_DISTANCE_MIN = .5f;
         private const float _DEBUG_RAY_DURATION = 1f;
         private const float RAYCAST_LENGTH = 1f;
         private bool _collisionDetected = false;
         private RaycastHit _hit;
         private Vector3 _direction;
         private Vector3 _groundDirection = Vector3.down;
-        private Vector3 _offset = Vector3.up * .5f;
+        private Vector3 _offset = Vector3.up * 0f;
         private bool _isGrounded = true;
         private bool _isOnConveyor = false;
 
@@ -51,6 +53,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         protected override void Tick()
         {
+            print((int)_collisionLayer);
             CheckCollision();
             UpdateCubePosition();
         }
@@ -84,10 +87,8 @@ namespace Com.UnBocal.Rush.Tickables
         {
             _isGrounded = LaunchRaycast(_groundDirection);
 
-            print(_isGrounded);
-
             if (!_isGrounded) Falling.Invoke();
-            else if ((_lastPosition - m_transform.position).y > 0f) Land.Invoke();
+            else if (Mathf.Abs((_lastPosition - m_transform.position).y) > _FALLING_DISTANCE_MIN) Land.Invoke();
             return _isGrounded;
         }
 
@@ -163,7 +164,7 @@ namespace Com.UnBocal.Rush.Tickables
                 LaunchRaycast(_direction, Color.red);
                 // Can The Cube Go In This Direction
                 if (NoCollisionFound(l_currentDrectionIndex)) return;
-                else if (CollideWithBlocs()) return;
+                // else if (CollideWithBlocs()) return;
 
                 _direction = Quaternion.AngleAxis(Rolling.ROTATION, Vector3.up) * _direction;
             }
@@ -208,7 +209,7 @@ namespace Com.UnBocal.Rush.Tickables
             // Debug
             Debug.DrawLine(l_position, l_position + pDirection * RAYCAST_LENGTH, pColor, _DEBUG_RAY_DURATION);
 
-            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH);
+            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH, _collisionLayer);
         }
 
         private bool LaunchRaycast(Vector3 pDirection) => LaunchRaycast(pDirection, Color.red);

@@ -1,10 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
-using Unity.VisualScripting;
-using UnityEditor.Rendering;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class CameraRotate : MonoBehaviour
 {
@@ -21,7 +15,7 @@ public class CameraRotate : MonoBehaviour
 
 
     // Rotation Properties
-    [SerializeField] private Vector2 _speed = Vector2.one * 50f;
+    [SerializeField] private Vector2 _speed = Vector2.one * 15f;
 
     // Position Properties
     [SerializeField] private float _distanceMin = 9f;
@@ -55,7 +49,7 @@ public class CameraRotate : MonoBehaviour
 
     private void RotateOnInput()
     {
-        if (!Input.GetMouseButton(1) || Input.touchCount == 1) return;
+        if (!Input.GetMouseButton(1)) return;
 
         Vector3 test = _transform.forward; test.y = 0f;
 

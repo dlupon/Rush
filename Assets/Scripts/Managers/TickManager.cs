@@ -6,7 +6,7 @@ namespace Com.UnBocal.Rush.Managers
     public class TickManager : MonoBehaviour
     {
         // Ticks
-        [SerializeField] private float _tickPerSecond = 1;
+        [SerializeField, Range(.1f, 15f)] private float _tickPerSecond = 1;
         private int _tickCount = default;
 
         private const float TICK_DURATION = 1f;
