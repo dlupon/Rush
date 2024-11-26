@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 3959673603806453385}
   - component: {fileID: 4122924772429509004}
   - component: {fileID: 7093874795395929903}
+  - component: {fileID: 942650991496293624}
   m_Layer: 0
   m_Name: Spawner
   m_TagString: Untagged
@@ -104,6 +105,7 @@ MonoBehaviour:
   LocalTick:
     m_PersistentCalls:
       m_Calls: []
+  _destroyOnStopRunning: 0
 --- !u!114 &4122924772429509004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,6 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a88a4e594d40c084fabc2929f8e51f14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _deleteOnStopRunning: 0
   _transformRenderer: {fileID: 8940061603734361741}
   _meshRenderer: {fileID: 341213795785940758}
   _materialColors: {fileID: 2100000, guid: 9119ba892272e1943b28d1b9f900a1ef, type: 2}
@@ -135,6 +138,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _meshRenderer: {fileID: 341213795785940758}
+--- !u!114 &942650991496293624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4672671530434976293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40df8db76b231ff459bbad5d97ab2cbd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _transformRenderer: {fileID: 8940061603734361741}
 --- !u!1001 &1404465036246254482
 PrefabInstance:
   m_ObjectHideFlags: 0

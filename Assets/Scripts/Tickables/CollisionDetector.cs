@@ -1,3 +1,4 @@
+using Com.UnBocal.Rush.Properties;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -25,7 +26,6 @@ namespace Com.UnBocal.Rush.Tickables
         private Rolling _rolling;
 
         // Collosion
-        [SerializeField] public LayerMask _collisionLayer = 64;
         private const float _FALLING_DISTANCE_MIN = .5f;
         private const float _DEBUG_RAY_DURATION = 1f;
         private const float RAYCAST_LENGTH = 1f;
@@ -56,7 +56,6 @@ namespace Com.UnBocal.Rush.Tickables
 
         protected override void Tick()
         {
-            print((int)_collisionLayer);
             CheckCollision();
             UpdateCubePosition();
         }
@@ -97,6 +96,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void OnCollisionArrow()
         {
+            print("ARROW");
             ResetGroundProperties();
             // Don't Launch The Event If The Arrow Don't Change The Initial Direction
             if (_hit.collider.transform.forward == _rolling.Direction) return;
@@ -107,7 +107,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             ResetGroundProperties();
             if (!_hit.collider.TryGetComponent(out Switch l_switch)) return;
-            Quaternion l_rotation = Quaternion.AngleAxis(Rolling.ROTATION * l_switch.Orientation, Vector3.up);
+            Quaternion l_rotation = Quaternion.AngleAxis(Game.Properties.ROTATION * l_switch.Orientation, Vector3.up);
             CollisionArrow.Invoke(l_rotation * _rolling.Direction);
         }
 
@@ -169,7 +169,7 @@ namespace Com.UnBocal.Rush.Tickables
                 if (NoCollisionFound(l_currentDrectionIndex)) return;
                 // else if (CollideWithBlocs()) return;
 
-                _direction = Quaternion.AngleAxis(Rolling.ROTATION, Vector3.up) * _direction;
+                _direction = Quaternion.AngleAxis(Game.Properties.ROTATION, Vector3.up) * _direction;
             }
 
             if (l_currentDrectionIndex >= l_maxDirectionIndex) Stuck.Invoke();
@@ -212,7 +212,7 @@ namespace Com.UnBocal.Rush.Tickables
             // Debug
             Debug.DrawLine(l_position, l_position + pDirection * RAYCAST_LENGTH, pColor, _DEBUG_RAY_DURATION);
 
-            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH, _collisionLayer);
+            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH);
         }
 
         private bool LaunchRaycast(Vector3 pDirection) => LaunchRaycast(pDirection, Color.red);

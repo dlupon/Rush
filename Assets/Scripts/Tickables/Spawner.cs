@@ -1,3 +1,4 @@
+using Com.UnBocal.Rush.Properties;
 using DG.Tweening;
 using System;
 using UnityEngine;
@@ -51,7 +52,7 @@ namespace Com.UnBocal.Rush.Tickables
             if (_spawningCount >= _spawningRate.Length) { StopSpawning();  return; }
             if (_spawningRate[_spawningCount] != 0)
             {
-                if (_spawningCount == _spawningRate.Length - 1 && _isCube) SetAsCube();
+                if (_spawningCount == _spawningRate.Length - 1 && _isCube) SpawnCube(SetAsCube());
                 else SpawnCube();
             }
             _spawningCount++;
@@ -63,14 +64,21 @@ namespace Com.UnBocal.Rush.Tickables
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Spawn
         #region Spawn
+        private void SpawnCube(Transform pCurrentCube)
+        {
+            Vector3 lDirection = Quaternion.AngleAxis(Game.Properties.ROTATION * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.forward;
+            pCurrentCube.GetComponent<Rolling>().SetDirection(lDirection);
+            if (pCurrentCube.TryGetComponent(out ChangeColorMaterial lCurrentChangeColorMaterial)) lCurrentChangeColorMaterial.SetMaterialColor(_materialColors);
+        }
+
         private void SpawnCube()
         {
             Transform _currentCube = Instantiate(_cubeFactory, m_transform.position, transform.rotation).transform;
-            _currentCube.rotation = Quaternion.AngleAxis(90f * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.rotation;
-            _currentCube.GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
+            SpawnCube(_currentCube);
         }
-    
-        private void SetAsCube()
+
+
+        private Transform SetAsCube()
         {
             m_transform.DOScale(Vector3.one, 1f).SetEase(Ease.OutBack);
 
@@ -81,6 +89,8 @@ namespace Com.UnBocal.Rush.Tickables
             _CollisionComponent.SetDeleteOnStopRunning(true);
             _rollingComponent.SetDeleteOnStopRunning(true);
             StopSpawning();
+            
+            return m_transform;
         }
         #endregion
 

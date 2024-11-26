@@ -28,9 +28,10 @@ public class TilePlacer : MonoBehaviour
         // if (_hit.collider.tag != "Tile") return;
 
         Transform _colliderTransform = _hit.collider.transform;
-        _colliderTransform.DOKill();
-        _colliderTransform.rotation = Quaternion.identity;
-        _colliderTransform.DOShakeRotation(1f, 10f);
+        if (!_colliderTransform.TryGetComponent(out JuicyTouch l_JT)) return;
+
+        l_JT.Shake();
+
 
         Debug.DrawLine(_transform.position - _transform.up * .1f, _hit.point, Color.blue);
     }

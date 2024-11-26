@@ -22,7 +22,6 @@ namespace Com.UnBocal.Rush.Tickables
         private Action OnTick;
 
         // Rotation
-        public const float ROTATION = 90f;
         private Vector3 _rotationAxis;
 
         private Quaternion _startRotation = Quaternion.identity;
@@ -31,7 +30,7 @@ namespace Com.UnBocal.Rush.Tickables
         private Quaternion _startRotationPosition;
         private Quaternion _endRotationPosition;
         // Movements
-        private Vector3 _direction = Vector3.forward;
+        private Vector3 _direction = Vector3.zero;
         private Vector3 _conveyorOffset = Vector3.up * .5f;
         private Vector3 _conveyorDirection = Vector3Int.forward;
         private Vector3 _startPosition, _endPosition = Vector3Int.zero;
@@ -222,11 +221,11 @@ namespace Com.UnBocal.Rush.Tickables
         {
             // Update Rotation
             _startRotation = _endRotation;
-            _endRotation = Quaternion.AngleAxis(ROTATION, _rotationAxis) * _startRotation;
+            _endRotation = Quaternion.AngleAxis(Game.Properties.ROTATION, _rotationAxis) * _startRotation;
 
             // Update Rotation For The Position Offset
             _startRotationPosition = Quaternion.identity;
-            _endRotationPosition = Quaternion.AngleAxis(ROTATION, _rotationAxis) * _startRotationPosition;
+            _endRotationPosition = Quaternion.AngleAxis(Game.Properties.ROTATION, _rotationAxis) * _startRotationPosition;
         }
 
         private void UpdateNextPositionAndRotation() => UpdateNextPositionAndRotation(_direction);
@@ -242,7 +241,7 @@ namespace Com.UnBocal.Rush.Tickables
         private void ChangeDirection(Vector3 pDirection)
         {
             _direction = pDirection.normalized;
-            _rotationAxis = Quaternion.AngleAxis(ROTATION, Vector3.up) * _direction;
+            _rotationAxis = Quaternion.AngleAxis(Game.Properties.ROTATION, Vector3.up) * _direction;
         }
 
         private void ChangeStartPotition(Vector3 p_newPosition)
@@ -258,7 +257,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             _endPosition = _startPosition = m_transform.position + Vector3.down * .5f;
             _endRotation = _startRotation = m_transform.rotation;
-            _direction = m_transform.forward;
+            _direction = _direction == Vector3.zero ? m_transform.forward : _direction;
         }
 
         private void SetCurve()
@@ -270,6 +269,8 @@ namespace Com.UnBocal.Rush.Tickables
         }
 
         public void SetRenderer(Transform pTransform) => _transformRenderer = pTransform;
+
+        public void SetDirection(Vector3 pDirection) => _direction = pDirection;
         #endregion
     }
 }

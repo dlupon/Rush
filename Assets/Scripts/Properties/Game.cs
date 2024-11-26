@@ -1,4 +1,4 @@
-using Unity.VisualScripting.FullSerializer;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -16,6 +16,9 @@ namespace Com.UnBocal.Rush.Properties
             public static UnityEvent FirstTick = new UnityEvent();
             public static UnityEvent Tick = new UnityEvent();
             public static UnityEvent DemiTick = new UnityEvent();
+
+            // Level
+            public static UnityEvent<Properties.ActionTile[]> ActionTilesSeted = new UnityEvent<Properties.ActionTile[]>();   
         }
 
         public static class Properties
@@ -41,6 +44,20 @@ namespace Com.UnBocal.Rush.Properties
 
             // Tick
             private static float _tickRatio;
+
+            // Orientation
+            public const float ROTATION = 90f;
+            public enum Orientation { NORTH, EAST, SOUTH, WEST }
+
+            // Tiles
+            public static ActionTile[] CurrentActionTiles => _currentActionTiles;
+            public static ActionTile[] _currentActionTiles;
+            [Serializable] public struct ActionTile
+            {
+                public GameObject Factory;
+                public Orientation Direction;
+                public int Count;
+            }
             #endregion
 
             // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Screen
@@ -81,6 +98,15 @@ namespace Com.UnBocal.Rush.Properties
                 if (_running) Events.Running.Invoke();
                 else Events.StopRunning.Invoke();
                 return _running;
+            }
+            #endregion
+
+            // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Level
+            #region Level
+            public static void SetCurrentActionTiles(ActionTile[] pCurrentActionTiles)
+            {
+                _currentActionTiles = pCurrentActionTiles;
+                Events.ActionTilesSeted.Invoke(_currentActionTiles);
             }
             #endregion
 

@@ -15,7 +15,7 @@ public class CameraRotate : MonoBehaviour
 
 
     // Rotation Properties
-    [SerializeField] private Vector2 _speed = Vector2.one * 15f;
+    [SerializeField] private Vector2 _speed = new Vector3(30f, 15f);
 
     // Position Properties
     [SerializeField] private float _distanceMin = 9f;
