@@ -9,9 +9,20 @@ public class TilePlacer : MonoBehaviour
     private Camera _camera;
 
     // Tile
+    [SerializeField] private float _tileFollowingSpeed = 10f;
     [SerializeField] private LayerMask _layerTile;
+    [SerializeField] private LayerMask _LayerJuicy;
     private Game.Properties.ActionTile _actionTile = default;
     private Transform _currentTile = null;
+    private Vector3 _offsetDefault = Vector3.up;
+    private Vector3 _offsetOnPlacing = Vector3.up * .5f;
+
+    // Raycast
+    private const float RAYCAST_MAX_DISTANCE = 100f;
+    private Ray _raycast;
+    private RaycastHit _hit;
+    private Transform _HitColliderTrasnform;
+    private bool _hitFound;
 
     // Check
     private bool _canUseTile => _hitFound && _currentTile != null;
@@ -67,11 +78,12 @@ public class TilePlacer : MonoBehaviour
         _currentTile.gameObject.layer = Game.Properties.LayerIgnore;
     }
 
-
     private void UpdateCurrentTile()
     {
-        CheckRemoveTile();
         if (!_canUseTile) return;
+        if (Game.Properties.Running) { Juice();  return; }
+
+        // CheckRemoveTile();
         UpdateCurrentTilePosition();
         CheckPlacingTile();
     }
@@ -79,6 +91,13 @@ public class TilePlacer : MonoBehaviour
     private void UpdateCurrentTilePosition()
     {
         _currentTile.position = _HitColliderTrasnform.position + _offsetDefault;
+    }
+
+    private void Juice()
+    {
+        if (!Input.GetMouseButton(0)) return;
+        if (!_hit.collider.TryGetComponent(out JuicyTouch lJT)) return;
+        lJT.Shake();
     }
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Placing
@@ -110,24 +129,13 @@ public class TilePlacer : MonoBehaviour
 
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // RayCast
-    // Tile
-    [SerializeField] private float _tileFollowingSpeed = 10f;
-    private Vector3 _offsetDefault = Vector3.up;
-    private Vector3 _offsetOnPlacing = Vector3.up * .5f;
-
-    // Raycast
-    private const float RAYCAST_MAX_DISTANCE = 100f;
-    private Ray _raycast;
-    private RaycastHit _hit;
-    private Transform _HitColliderTrasnform;
-    private bool _hitFound;
 
     private void UpdateRaycast()
     {
         _raycast = _camera.ScreenPointToRay(Game.Inputs.MousePosition);
-        _hitFound = Physics.Raycast(_raycast, out _hit, RAYCAST_MAX_DISTANCE, _layerTile);
+        _hitFound = Physics.Raycast(_raycast, out _hit, RAYCAST_MAX_DISTANCE, Game.Properties.Running ? _LayerJuicy : _layerTile);
         if (!_hitFound) return;
-        if (_hit.collider.gameObject.tag != "Tile") { _hitFound = false; return; }
+        if (_hit.collider.gameObject.tag != "Tile" && !Game.Properties.Running) { _hitFound = false; return; }
         _HitColliderTrasnform = _hit.collider.transform;
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -134,7 +135,7 @@ namespace Com.UnBocal.Rush.Properties
             private const KeyCode ALT = KeyCode.LeftAlt;
 
             // Keyboard
-            public static bool Run => Input.GetKeyDown(RUN);
+            public static bool Run => Input.GetKeyDown(RUN) || Input.GetMouseButtonDown((int)MouseButton.Middle);
 
             // Mouse
             public static Vector3 MousePosition => GetMousePosition();

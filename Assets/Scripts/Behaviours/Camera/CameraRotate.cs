@@ -18,7 +18,7 @@ public class CameraRotate : MonoBehaviour
     [SerializeField] private Vector2 _speed = new Vector3(30f, 15f);
 
     // Position Properties
-    [SerializeField] private float _distanceMin = 9f;
+    [SerializeField] private float _distanceMin = 13f;
     [SerializeField] private float _distanceMax = 30f;
     [SerializeField] private float _distanceSpeed = 10f;
     private float _distance = 0f;
@@ -27,7 +27,7 @@ public class CameraRotate : MonoBehaviour
     {
         _transform = transform;
         _transform.position = -Vector3.forward;
-        _distance = _distanceMax;
+        _distance = _distanceMin;
     }
 
     private void Update()

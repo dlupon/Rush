@@ -465,7 +465,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: {x: 30, y: 15}
-  _distanceMin: 9
+  _distanceMin: 13
   _distanceMax: 30
   _distanceSpeed: 20
 --- !u!114 &963194233
@@ -480,10 +480,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd368d311a7e1bd4c8aab9f0f247379d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _tileFollowingSpeed: 10
   _layerTile:
     serializedVersion: 2
     m_Bits: 64
-  _tileFollowingSpeed: 10
+  _LayerJuicy:
+    serializedVersion: 2
+    m_Bits: 960
 --- !u!1 &1166943873
 GameObject:
   m_ObjectHideFlags: 0
