@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class ChangeColorMaterial : MonoBehaviour
 {
-    [SerializeField] private MeshRenderer _meshRenderer;
+    [SerializeField] private Renderer _renderer;
 
     public void SetMaterialColor(Material pColor)
     {
-        _meshRenderer.materials[_meshRenderer.materials.Length - 1] = pColor;
+        return;
+        _renderer.sharedMaterials[_renderer.materials.Length - 1] = pColor;
+
         Destroy(this);
     }
 }

@@ -17,7 +17,7 @@ namespace Com.UnBocal.Rush.Properties
             public static UnityEvent FirstTick = new UnityEvent();
             public static UnityEvent Tick = new UnityEvent();
             public static UnityEvent DemiTick = new UnityEvent();
-             
+            
             // Level
             public static UnityEvent<Properties.ActionTile[]> ActionTilesUpdated = new UnityEvent<Properties.ActionTile[]>();   
 
@@ -51,7 +51,7 @@ namespace Com.UnBocal.Rush.Properties
 
             // Orientation
             public const float ROTATION = 90f;
-            public enum Orientation { NORTH, EAST, SOUTH, WEST } // Boobs
+            public enum Orientation { NORTH, EAST, SOUTH, WEST }
 
             // Collision
             private const string LAYER_CUBE = "Cube";
@@ -62,6 +62,7 @@ namespace Com.UnBocal.Rush.Properties
             public static LayerMask LayerIgnore => LayerMask.NameToLayer(LAYER_IGNORE);
 
             // Tiles
+            public enum CubeType { WHITE, BLUE, GREEN, RED, ORANGE, PINK }
             public static ActionTile[] CurrentActionTiles => _currentActionTiles;
             private static ActionTile[] _currentActionTiles;
             [Serializable] public struct ActionTile

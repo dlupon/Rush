@@ -26,6 +26,7 @@ namespace Com.UnBocal.Rush.Tickables
         private BoxCollider _collider;
         private Rigidbody _body;
         private Rolling _rolling;
+        private Typable _typable;
 
         // Collosion
         [SerializeField] private LayerMask _GroundLayer;
@@ -39,7 +40,8 @@ namespace Com.UnBocal.Rush.Tickables
         private Vector3 _direction;
         private Vector3 _groundDirection = Vector3.down;
         private Vector3 _offset = Vector3.up * 0f;
-        private bool _isGrounded = true;
+        private bool _needSideCheck = false;
+        private bool _isGrounded = false;
         private bool _isOnConveyor = false;
 
         // Positions
@@ -60,6 +62,7 @@ namespace Com.UnBocal.Rush.Tickables
             _collider = GetComponent<BoxCollider>();
             _body = GetComponent<Rigidbody>();
             _rolling = GetComponent<Rolling>();
+            _typable = GetComponent<Typable>();
         }
         #endregion
 
@@ -73,19 +76,21 @@ namespace Com.UnBocal.Rush.Tickables
         private void CheckCollision()
         {
             CheckGroundCollisions();
-            if (!_isGrounded) return;
-            CheckCollisionWallAndBlocs();
+            if (!(_isGrounded && _needSideCheck)) return;
+            CheckSideCollision();
         }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Ground Collision
         #region Ground Collision
         private void CheckGroundCollisions()
         {
+            _needSideCheck = true;
             if (!GroundCollision()) return;
             if (CubeDidntMove()) return;
             // Cube Behavior Based on The Collisiond
             switch (_hit.collider.tag)
             {
+                case "Goal": OnCollisionGoal(); return;
                 case "Arrow": OnCollisionArrow(); return;
                 case "Switch": OnCollisionSwitch(); return;
                 case "Stopper": OnCollisionStopper(); return;
@@ -104,6 +109,12 @@ namespace Com.UnBocal.Rush.Tickables
             return _isGrounded;
         }
 
+        private void OnCollisionGoal()
+        {
+            if (!_hit.collider.TryGetComponent(out Typable _GoalTypable)) return;
+            if (_GoalTypable.CubeType != _typable.CubeType) return;
+            Destroy(gameObject);
+        }
         private void OnCollisionArrow()
         {
             ResetGroundProperties();
@@ -123,6 +134,7 @@ namespace Com.UnBocal.Rush.Tickables
         private void OnCollisionStopper()
         {
             ResetGroundProperties();
+            _needSideCheck = false;
             CollisionStopper.Invoke();
         }
 
@@ -134,7 +146,9 @@ namespace Com.UnBocal.Rush.Tickables
         
         private void OnCollisionTeleporter()
         {
+            ResetGroundProperties();
             if (CubeDidntMove()) return;
+            _needSideCheck = false;
             CollisionTeleporter.Invoke(_hit.collider.GetComponent<Teleporter>().TeleportPosition);
         }
 
@@ -149,7 +163,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Side Collision
         #region Side Collision
-        public void CheckCollisionWallAndBlocs()
+        public void CheckSideCollision()
         {
             if (ConveyorCollisionCheck()) return;
             DefaultCollisionCheck();
@@ -176,7 +190,6 @@ namespace Com.UnBocal.Rush.Tickables
                 LaunchRaycast(_direction, _SideLayer);
                 // Can The Cube Go In This Direction
                 if (NoCollisionFound(l_currentDrectionIndex)) return;
-                // else if (CollideWithBlocs()) return;
 
                 _direction = Quaternion.AngleAxis(Game.Properties.ROTATION, Vector3.up) * _direction;
             }
@@ -241,7 +254,7 @@ namespace Com.UnBocal.Rush.Tickables
             // Debug
             Debug.DrawLine(l_position, l_position + pDirection * RAYCAST_LENGTH, pColor, DEBUG_RAY_DURATION);
 
-            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH, _SideLayer);
+            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH, pLayer);
         }
 
         private bool LaunchRaycast(Vector3 pDirection, LayerMask pLayer) => LaunchRaycast(pDirection, pLayer, Color.red);

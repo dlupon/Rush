@@ -46,7 +46,7 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
         private void OnTick()
         {
-            if (!m_tickListerner.IsTicking) return;
+            if (!(m_tickListerner.IsTicking && m_tickListerner.TickLeft <= 0)) return;
             if (--_tickLeft > 0) return;
             Tick();
         }

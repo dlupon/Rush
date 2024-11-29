@@ -11,6 +11,7 @@ public class TilePlacer : MonoBehaviour
     // Tile
     [SerializeField] private float _tileFollowingSpeed = 10f;
     [SerializeField] private LayerMask _layerTile;
+    [SerializeField] private LayerMask _layerActionTile;
     [SerializeField] private LayerMask _LayerJuicy;
     private Game.Properties.ActionTile _actionTile = default;
     private Transform _currentTile = null;

@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Com.UnBocal.Rush.Properties;
 using DG.Tweening;
+using UnityEngine.Assertions.Must;
 
 namespace Com.UnBocal.Rush.Tickables
 {
@@ -35,8 +36,15 @@ namespace Com.UnBocal.Rush.Tickables
         private Vector3 _conveyorDirection = Vector3Int.forward;
         private Vector3 _startPosition, _endPosition = Vector3Int.zero;
 
-        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
+        // Tick Count
+        private const int TICK_START_MOVE = 1;
+        private const int TICK_COLLISION_WITH_WALL = 2;
+        private const int TICK_COLLISION_WITH_STOP = 2;
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update / Tick
         private void Update() => OnUpdate();
+
+        protected override void Tick() => OnTick();
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         #region Initialization
@@ -72,8 +80,6 @@ namespace Com.UnBocal.Rush.Tickables
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
         #region Events
-        protected override void Tick() => OnTick();
-
         private void OnCubeCollision()
         {
             _transformRenderer.DOKill();
@@ -82,9 +88,9 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void OnArrowCollision(Vector3 pDirection) => ChangeDirection(pDirection);
 
-        private void OnWallCollision(Vector3 pDirection) => SetStartMove(pDirection);
+        private void OnWallCollision(Vector3 pDirection) => SetStartMoveAfterWall(pDirection);
 
-        private void OnStopperCollision() => SetStartMove();
+        private void OnStopperCollision() => SetStuck(TICK_COLLISION_WITH_STOP);
         
         private void OnTeleporterCollision(Vector3 p_newPosition) => ChangeStartPotition(p_newPosition);
 
@@ -109,7 +115,16 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void SetStartMove(Vector3 pDirection)
         {
-            m_tickListerner.WaitFor(1);
+            m_tickListerner.WaitFor(TICK_START_MOVE);
+
+            ChangeDirection(pDirection);
+            OnTick = SetMove;
+            OnUpdate = UpdateStuck;
+        }
+
+        private void SetStartMoveAfterWall(Vector3 pDirection)
+        {
+            m_tickListerner.WaitFor(TICK_COLLISION_WITH_WALL);
 
             ChangeDirection(pDirection);
             OnTick = SetMove;
@@ -135,7 +150,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void SetStuck(int pWaitTick)
         {
-            WaitFor(pWaitTick);
+            m_tickListerner.WaitFor(pWaitTick);
             OnUpdate = UpdateStuck;
             OnTick = SetStartMove;
         }
@@ -254,6 +269,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             SetStuck(2);
             _endPosition = p_newPosition;
+            m_transform.position = p_newPosition + Vector3.up * .5f;
         }
         #endregion
 

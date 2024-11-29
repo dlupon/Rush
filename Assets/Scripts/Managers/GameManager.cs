@@ -22,6 +22,7 @@ namespace Com.UnBocal.Rush.Managers
         {
             if (!Game.Inputs.Run) return;
             Game.Properties.ToggleRunning();
+            Time.timeScale = 1f;
         }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setters

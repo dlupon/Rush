@@ -10,9 +10,9 @@ namespace Com.UnBocal.Rush.Tickables
     {
         // Components
         [SerializeField] private Transform _transformRenderer;
-        [SerializeField] private MeshRenderer _meshRenderer;
         private GameObject _gameObject;
         private Collider _collider;
+        private Typable _typable;
 
         // Tick
         private Action OnTick;
@@ -36,6 +36,9 @@ namespace Com.UnBocal.Rush.Tickables
         private Vector3 _recoveryPosition;
         private Quaternion _recoveryRotation;
 
+        // Debug
+        [SerializeField] private bool _debugSpawning = true;
+
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         protected override void OnStart()
         {
@@ -48,6 +51,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             base.SetComponents();
             _gameObject = gameObject;
+            _typable = GetComponent<Typable>();
         }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
@@ -56,6 +60,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Spawn()
         {
+            if (!_debugSpawning) return;
             if (_spawningCount >= _spawningRate.Length) { StopSpawning();  return; }
             if (_spawningRate[_spawningCount] != 0)
             {
@@ -83,6 +88,7 @@ namespace Com.UnBocal.Rush.Tickables
         private void SpawnCube()
         {
             Transform _currentCube = Instantiate(_cubeFactory, m_transform.position, transform.rotation).transform;
+            _currentCube.GetComponent<Typable>().SetCubeType(_typable.CubeType);
             SpawnCube(_currentCube);
         }
 
@@ -122,6 +128,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void SetSpawn()
         {
+            m_transform.DOKill();
             m_transform.position = _recoveryPosition;
             m_transform.rotation = _recoveryRotation;
             _gameObject.layer = Game.Properties.LayerIgnore;
@@ -142,8 +149,8 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Recovery()
         {
-            m_transform.DOMove(_recoveryPosition, 1f).SetEase(Ease.OutExpo);
-            m_transform.DORotate(_recoveryRotation.eulerAngles, 1f).SetEase(Ease.OutExpo);
+            m_transform.DOMove(_recoveryPosition, 1f).From(_recoveryPosition + Vector3.down).SetEase(Ease.OutExpo);
+            m_transform.rotation = _recoveryRotation;
         }
         #endregion
     }

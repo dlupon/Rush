@@ -42,6 +42,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6087177541993098394}
   - component: {fileID: 8282124304229669862}
+  - component: {fileID: 7211027569916311301}
   - component: {fileID: 3959673603806453385}
   - component: {fileID: 4122924772429509004}
   - component: {fileID: 7093874795395929903}
@@ -90,6 +91,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7211027569916311301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4672671530434976293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd454934c8af54418b10342be093d82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _cubeType: 0
 --- !u!114 &3959673603806453385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120,7 +134,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_deleteOnStopRunning: 0
   _transformRenderer: {fileID: 8940061603734361741}
-  _meshRenderer: {fileID: 341213795785940758}
   _materialColors: {fileID: 2100000, guid: 9119ba892272e1943b28d1b9f900a1ef, type: 2}
   _cubeFactory: {fileID: 4025685777736603955, guid: e8d2e7bb0e321794b842446874d8d2b8, type: 3}
   _spawningRate: 01000000
@@ -134,6 +147,7 @@ MonoBehaviour:
   _groundLayer:
     serializedVersion: 2
     m_Bits: 192
+  _debugSpawning: 1
 --- !u!114 &7093874795395929903
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -146,7 +160,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1527be7d2aa2ede4aafe4ceffc46ae21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _meshRenderer: {fileID: 341213795785940758}
+  _renderer: {fileID: 341213795785940758}
 --- !u!114 &942650991496293624
 MonoBehaviour:
   m_ObjectHideFlags: 0
