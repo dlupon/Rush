@@ -16,9 +16,12 @@ namespace Com.UnBocal.Rush.Properties
             public static UnityEvent FirstTick = new UnityEvent();
             public static UnityEvent Tick = new UnityEvent();
             public static UnityEvent DemiTick = new UnityEvent();
-
+             
             // Level
-            public static UnityEvent<Properties.ActionTile[]> ActionTilesSeted = new UnityEvent<Properties.ActionTile[]>();   
+            public static UnityEvent<Properties.ActionTile[]> ActionTilesUpdated = new UnityEvent<Properties.ActionTile[]>();   
+
+            // Hud
+            public static UnityEvent<Properties.ActionTile> TileSelected = new UnityEvent<Properties.ActionTile>();
         }
 
         public static class Properties
@@ -47,11 +50,19 @@ namespace Com.UnBocal.Rush.Properties
 
             // Orientation
             public const float ROTATION = 90f;
-            public enum Orientation { NORTH, EAST, SOUTH, WEST }
+            public enum Orientation { NORTH, EAST, SOUTH, WEST } // Boobs
+
+            // Collision
+            private const string LAYER_CUBE = "Cube";
+            private const string LAYER_TILE = "Tile";
+            private const string LAYER_IGNORE = "Ignore";
+            public static LayerMask LayerCube => LayerMask.NameToLayer(LAYER_CUBE);
+            public static LayerMask LayerTile => LayerMask.NameToLayer(LAYER_TILE);
+            public static LayerMask LayerIgnore => LayerMask.NameToLayer(LAYER_IGNORE);
 
             // Tiles
             public static ActionTile[] CurrentActionTiles => _currentActionTiles;
-            public static ActionTile[] _currentActionTiles;
+            private static ActionTile[] _currentActionTiles;
             [Serializable] public struct ActionTile
             {
                 public GameObject Factory;
@@ -106,7 +117,7 @@ namespace Com.UnBocal.Rush.Properties
             public static void SetCurrentActionTiles(ActionTile[] pCurrentActionTiles)
             {
                 _currentActionTiles = pCurrentActionTiles;
-                Events.ActionTilesSeted.Invoke(_currentActionTiles);
+                Events.ActionTilesUpdated.Invoke(_currentActionTiles);
             }
             #endregion
 
@@ -114,8 +125,13 @@ namespace Com.UnBocal.Rush.Properties
 
         public static class Inputs
         {
+            // Debug
+            private static bool _debug = false;
+
             // Inputs
             private const KeyCode RUN = KeyCode.Space;
+            private const KeyCode DEBUG = KeyCode.LeftControl;
+            private const KeyCode ALT = KeyCode.LeftAlt;
 
             // Keyboard
             public static bool Run => Input.GetKeyDown(RUN);
@@ -126,6 +142,19 @@ namespace Com.UnBocal.Rush.Properties
             private static Vector3 _mousePosition = Vector3.zero;
 
             // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Keyboard
+
+            public static bool DEBUGNextTick()
+            {
+                if (Input.GetKeyDown(DEBUG)) _debug = !_debug;
+
+                if (_debug)
+                {
+                    if (Input.GetKeyDown(ALT)) return true;
+                    return false;
+                }
+
+                return true;
+            }
 
             // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Mouse
             public static Vector3 GetMousePosition()

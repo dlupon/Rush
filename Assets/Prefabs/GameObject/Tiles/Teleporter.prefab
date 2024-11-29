@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4622703485643617469}
   - component: {fileID: 503027198196498552}
   - component: {fileID: 3287754224124489881}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -92,7 +92,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8691973945135461265}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Renderer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -124,7 +124,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2400296309198809871}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Teleporter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -159,7 +159,7 @@ GameObject:
   - component: {fileID: 7826387292469712451}
   - component: {fileID: 4158971401306444703}
   - component: {fileID: 1982322165008005082}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PointA
   m_TagString: Teleporter
   m_Icon: {fileID: 0}
@@ -225,7 +225,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1060033958001132574}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Renderer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -259,7 +259,7 @@ GameObject:
   - component: {fileID: 6326066628622066867}
   - component: {fileID: 8897222535736123461}
   - component: {fileID: 4093359748943376279}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -342,7 +342,7 @@ GameObject:
   - component: {fileID: 7068797143133988151}
   - component: {fileID: 4828496519891183122}
   - component: {fileID: 3652043255737734914}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PointB
   m_TagString: Teleporter
   m_Icon: {fileID: 0}

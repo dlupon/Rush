@@ -3,9 +3,10 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
-
 namespace Com.UnBocal.Rush.Tickables
 {
+    [RequireComponent(typeof(BoxCollider))]
+    [RequireComponent(typeof(Rigidbody))]
     public class CollisionDetector : Tickable
     {
         // Event
@@ -22,12 +23,16 @@ namespace Com.UnBocal.Rush.Tickables
         [HideInInspector] public UnityEvent Land = new UnityEvent();
 
         // Components
-        private Collider _collider;
+        private BoxCollider _collider;
+        private Rigidbody _body;
         private Rolling _rolling;
 
         // Collosion
-        private const float _FALLING_DISTANCE_MIN = .5f;
-        private const float _DEBUG_RAY_DURATION = 1f;
+        [SerializeField] private LayerMask _GroundLayer;
+        [SerializeField] private LayerMask _SideLayer;
+        [SerializeField] private LayerMask _CubeLayer;
+        private const float FALLING_DISTANCE_MIN = .5f;
+        private const float DEBUG_RAY_DURATION = 1f;
         private const float RAYCAST_LENGTH = 1f;
         private bool _collisionDetected = false;
         private RaycastHit _hit;
@@ -37,23 +42,28 @@ namespace Com.UnBocal.Rush.Tickables
         private bool _isGrounded = true;
         private bool _isOnConveyor = false;
 
-
-        // Positions For Switch Tile
+        // Positions
         private Vector3 _lastPosition = default;
 
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
+        #region Initialization
         protected override void OnStart()
         {
             base.OnStart();
             SetDeleteOnStopRunning(true);
+            SetCubeCollisionProperties();
         }
 
         protected override void SetComponents()
         {
             base.SetComponents();
-            _collider = GetComponent<Collider>();
+            _collider = GetComponent<BoxCollider>();
+            _body = GetComponent<Rigidbody>();
             _rolling = GetComponent<Rolling>();
         }
+        #endregion
 
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
         protected override void Tick()
         {
             CheckCollision();
@@ -87,16 +97,15 @@ namespace Com.UnBocal.Rush.Tickables
 
         private bool GroundCollision()
         {
-            _isGrounded = LaunchRaycast(_groundDirection);
+            _isGrounded = LaunchRaycast(_groundDirection, _GroundLayer);
 
             if (!_isGrounded) Falling.Invoke();
-            else if (Mathf.Abs((_lastPosition - m_transform.position).y) > _FALLING_DISTANCE_MIN) Land.Invoke();
+            else if (Mathf.Abs((_lastPosition - m_transform.position).y) > FALLING_DISTANCE_MIN) Land.Invoke();
             return _isGrounded;
         }
 
         private void OnCollisionArrow()
         {
-            print("ARROW");
             ResetGroundProperties();
             // Don't Launch The Event If The Arrow Don't Change The Initial Direction
             if (_hit.collider.transform.forward == _rolling.Direction) return;
@@ -150,7 +159,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             if (!_isOnConveyor) return false;
             _direction = _rolling.ConveyorDirection;
-            return !LaunchRaycast(_direction);
+            return !LaunchRaycast(_direction, _SideLayer);
         }
 
         private void DefaultCollisionCheck()
@@ -164,7 +173,7 @@ namespace Com.UnBocal.Rush.Tickables
             // Check Collision In 4 Directions
             for (l_currentDrectionIndex = 0; l_currentDrectionIndex < l_maxDirectionIndex; l_currentDrectionIndex++)
             {
-                LaunchRaycast(_direction, Color.red);
+                LaunchRaycast(_direction, _SideLayer);
                 // Can The Cube Go In This Direction
                 if (NoCollisionFound(l_currentDrectionIndex)) return;
                 // else if (CollideWithBlocs()) return;
@@ -196,6 +205,26 @@ namespace Com.UnBocal.Rush.Tickables
 
         #endregion
 
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Cube Collision
+        #region Cube Collision
+
+        private void SetCubeCollisionProperties()
+        {
+            _body.isKinematic = true;
+            _collider.isTrigger = true;
+            _collider.size = Vector3.one * .7f;
+            // _collider.includeLayers = _CubeLayer;
+            // _collider.excludeLayers = _SideLayer;
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            Time.timeScale = .1f;
+            other.transform.position += Vector3.up;
+        }
+
+        #endregion
+
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Motion Properties
         #region Motion Properties
         private void UpdateCubePosition() => _lastPosition = m_transform.position;
@@ -205,17 +234,25 @@ namespace Com.UnBocal.Rush.Tickables
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Raycast
         #region Raycasts
-        private bool LaunchRaycast(Vector3 pDirection, Color pColor)
+        private bool LaunchRaycast(Vector3 pDirection, LayerMask pLayer, Color pColor)
         {
             _hit = default;
             Vector3 l_position = m_transform.position + _offset;
             // Debug
-            Debug.DrawLine(l_position, l_position + pDirection * RAYCAST_LENGTH, pColor, _DEBUG_RAY_DURATION);
+            Debug.DrawLine(l_position, l_position + pDirection * RAYCAST_LENGTH, pColor, DEBUG_RAY_DURATION);
 
-            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH);
+            return _collisionDetected = Physics.Raycast(l_position, pDirection, out _hit, RAYCAST_LENGTH, _SideLayer);
         }
 
-        private bool LaunchRaycast(Vector3 pDirection) => LaunchRaycast(pDirection, Color.red);
+        private bool LaunchRaycast(Vector3 pDirection, LayerMask pLayer) => LaunchRaycast(pDirection, pLayer, Color.red);
         #endregion
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setter
+        public void SetLayer(LayerMask pCubeLayer, LayerMask pSideLayer, LayerMask pGroundLayer)
+        {
+            _CubeLayer = pCubeLayer;
+            _SideLayer = pSideLayer;
+            _GroundLayer = pGroundLayer;
+        }
     }
 }

@@ -30,13 +30,14 @@ namespace Com.UnBocal.Rush.Managers
 
         private void UpdateTimeTick()
         {
-            _time += _tickPerSecond * Time.deltaTime;
+            if (_time < 1) _time += _tickPerSecond * Time.deltaTime;
+            else _time = 1f;
             Game.Properties.SetTickRatio(_tickRatio = _time / TICK_DURATION);
         }
 
         private void Ticking()
         {
-            if (_time >= TICK_DURATION)
+            if (_time >= TICK_DURATION && Game.Inputs.DEBUGNextTick())
             {
                 ResetTick();
                 Tick();

@@ -51,8 +51,6 @@ public class CameraRotate : MonoBehaviour
     {
         if (!Input.GetMouseButton(1)) return;
 
-        Vector3 test = _transform.forward; test.y = 0f;
-
         _transform.RotateAround(Vector3.zero , Vector3.up, _speed.x * _inputStrength * _inputDirection.x * Time.deltaTime);
         _transform.RotateAround(Vector3.zero , transform.right, _speed.y * -_inputStrength * _inputDirection.y * Time.deltaTime);
     }

@@ -8,14 +8,15 @@ public class HUD : MonoBehaviour
     [SerializeField] private GameObject _tileFactory;
     private Game.Properties.ActionTile[] _actionTiles;
 
-    private void Start()
+    private void Awake()
     {
         ConnectEvents();
     }
 
+    // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
     private void ConnectEvents()
     {
-        Game.Events.ActionTilesSeted.AddListener(SetTiles);
+        Game.Events.ActionTilesUpdated.AddListener(SetTiles);
     }
 
     private void SetTiles(Game.Properties.ActionTile[] pActionTiles)
@@ -33,7 +34,16 @@ public class HUD : MonoBehaviour
     private void CreateTile(Game.Properties.ActionTile pCurrentActionTile)
     {
         Transform lCurrentTile = Instantiate(_tileFactory).transform;
-        lCurrentTile.GetComponent<TileRenderer>().SetTile(pCurrentActionTile.Factory, pCurrentActionTile.Direction);
+        Tile lTile = lCurrentTile.GetComponent<Tile>();
+        lCurrentTile.GetComponent<Tile>().SetTile(pCurrentActionTile);
         lCurrentTile.SetParent(_tileParent);
+
+        lTile.Click.AddListener(OnTileClick);
+    }
+
+    // ----------------~~~~~~~~~~~~~~~~~~~==========================# // UI
+    private void OnTileClick(Game.Properties.ActionTile pTileFactory)
+    {
+        Game.Events.TileSelected.Invoke(pTileFactory);
     }
 }

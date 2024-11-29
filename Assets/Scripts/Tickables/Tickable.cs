@@ -1,8 +1,6 @@
 using UnityEngine;
 using Com.UnBocal.Rush.Debugs;
-using Unity.IO.LowLevel.Unsafe;
 using Com.UnBocal.Rush.Properties;
-using Unity.VisualScripting;
 
 namespace Com.UnBocal.Rush.Tickables
 {
@@ -19,7 +17,7 @@ namespace Com.UnBocal.Rush.Tickables
         private int _tickLeft = 0;
 
         // Running
-        [SerializeField] private bool _deleteOnStopRunning = false;
+        [SerializeField] protected bool m_deleteOnStopRunning = false;
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
         private void Start()
@@ -77,10 +75,10 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Delete
         private void Delete()
         {
-            if (!_deleteOnStopRunning) return;
+            if (!m_deleteOnStopRunning) return;
             Destroy(this);
         }
 
-        public void SetDeleteOnStopRunning(bool pDelete) => _deleteOnStopRunning = pDelete;
+        public void SetDeleteOnStopRunning(bool pDelete) => m_deleteOnStopRunning = pDelete;
     }
 }

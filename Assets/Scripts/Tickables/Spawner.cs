@@ -9,9 +9,10 @@ namespace Com.UnBocal.Rush.Tickables
     public class Spawner : Tickable
     {
         // Components
-        private GameObject _gameObject;
         [SerializeField] private Transform _transformRenderer;
         [SerializeField] private MeshRenderer _meshRenderer;
+        private GameObject _gameObject;
+        private Collider _collider;
 
         // Tick
         private Action OnTick;
@@ -24,6 +25,12 @@ namespace Com.UnBocal.Rush.Tickables
         [SerializeField] [Tooltip("0 -> No Spawn\n1 -> Forward\n2 -> Right\n3 -> Back\n4 -> Left")] private int[] _spawningRate;
         [SerializeField] private bool _isCube = false;
         private int _spawningCount = 0;
+
+        // Collision
+        [SerializeField] private LayerMask _cubeLayer = default;
+        [SerializeField] private LayerMask _sideLayer = default;
+        [SerializeField] private LayerMask _groundLayer = default;
+        private LayerMask _defaultLayer = default;
 
         // Recovery
         private Vector3 _recoveryPosition;
@@ -68,7 +75,9 @@ namespace Com.UnBocal.Rush.Tickables
         {
             Vector3 lDirection = Quaternion.AngleAxis(Game.Properties.ROTATION * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.forward;
             pCurrentCube.GetComponent<Rolling>().SetDirection(lDirection);
-            if (pCurrentCube.TryGetComponent(out ChangeColorMaterial lCurrentChangeColorMaterial)) lCurrentChangeColorMaterial.SetMaterialColor(_materialColors);
+
+            if (pCurrentCube.TryGetComponent(out ChangeColorMaterial lCurrentChangeColorMaterial))
+                lCurrentChangeColorMaterial.SetMaterialColor(_materialColors);
         }
 
         private void SpawnCube()
@@ -85,6 +94,8 @@ namespace Com.UnBocal.Rush.Tickables
             CollisionDetector _CollisionComponent = _gameObject.AddComponent<CollisionDetector>();
             Rolling _rollingComponent = _gameObject.AddComponent<Rolling>();
             _rollingComponent.SetRenderer(_transformRenderer);
+            _gameObject.layer = Game.Properties.LayerCube;
+            _CollisionComponent.SetLayer(_cubeLayer, _sideLayer, _groundLayer);
 
             _CollisionComponent.SetDeleteOnStopRunning(true);
             _rollingComponent.SetDeleteOnStopRunning(true);
@@ -113,6 +124,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             m_transform.position = _recoveryPosition;
             m_transform.rotation = _recoveryRotation;
+            _gameObject.layer = Game.Properties.LayerIgnore;
             _spawningCount = 0;
             OnTick = Spawn;
         }

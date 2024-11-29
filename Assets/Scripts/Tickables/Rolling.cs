@@ -36,7 +36,6 @@ namespace Com.UnBocal.Rush.Tickables
         private Vector3 _startPosition, _endPosition = Vector3Int.zero;
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
-
         private void Update() => OnUpdate();
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
@@ -100,7 +99,11 @@ namespace Com.UnBocal.Rush.Tickables
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
         #region Set States
-        private void SetSpawn() { OnUpdate = UpdateStuck; OnTick = TickSpawn; }
+        private void SetSpawn()
+        {
+            OnUpdate = UpdateStuck;
+            OnTick = TickSpawn;
+        }
 
         private void SetStartMove() => SetStartMove(_direction);
 
@@ -198,7 +201,10 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void TickStartMove() => SetMove();
 
-        private void TickMove() => UpdateNextPositionAndRotation();
+        private void TickMove()
+        {
+            UpdateNextPositionAndRotation();
+        }
 
         private void TickConveyor() => UpdateNextPosition(_conveyorDirection);
 
