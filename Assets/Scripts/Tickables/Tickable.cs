@@ -13,7 +13,9 @@ namespace Com.UnBocal.Rush.Tickables
         protected DebugStateMachin m_debugTools = null;
 
         // Ticks
-        protected int m_tickLeft { get => _tickLeft; }
+        public bool IsTicking => _isTicking;
+        private bool _isTicking = true;
+        protected int m_tickLeft => _tickLeft;
         private int _tickLeft = 0;
 
         // Running
@@ -29,7 +31,10 @@ namespace Com.UnBocal.Rush.Tickables
         }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
-        protected virtual void SetComponents() { m_tickListerner = GetComponent<EventListener>(); TryGetComponent(out m_debugTools); m_transform = transform; }
+        protected virtual void SetComponents()
+        {
+            m_tickListerner = GetComponent<EventListener>();
+            m_transform = transform; }
         private void SetTickEvents()
         {
             m_tickListerner.LocalTick.AddListener(OnTick);
@@ -43,9 +48,16 @@ namespace Com.UnBocal.Rush.Tickables
             Game.Events.StopRunning.AddListener(PreStopRunning);
         }
 
+        protected virtual void DisconnectEvent()
+        {
+            Game.Events.Running.RemoveListener(OnRunning);
+            Game.Events.StopRunning.RemoveListener(PreStopRunning);
+        }
+
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
         private void OnTick()
         {
+            if (!_isTicking) return;
             if (!(m_tickListerner.IsTicking && m_tickListerner.TickLeft <= 0)) return;
             if (--_tickLeft > 0) return;
             Tick();
@@ -54,6 +66,8 @@ namespace Com.UnBocal.Rush.Tickables
         protected virtual void Tick() { }
 
         protected void WaitFor(int pTickNumber) => _tickLeft = pTickNumber;
+
+        public void SetListening(bool pListening) => _isTicking = pListening;
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Game Running
         protected virtual void OnRunning()
@@ -80,5 +94,7 @@ namespace Com.UnBocal.Rush.Tickables
         }
 
         public void SetDeleteOnStopRunning(bool pDelete) => m_deleteOnStopRunning = pDelete;
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // 
     }
 }

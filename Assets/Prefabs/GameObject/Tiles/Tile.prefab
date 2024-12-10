@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5306522582084030655}
   m_Layer: 6
-  m_Name: Renderer
+  m_Name: RendererContainer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -154,7 +154,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 9119ba892272e1943b28d1b9f900a1ef, type: 2}
     - target: {fileID: 919132149155446097, guid: 261db831a577ff24299eecafe65efe23, type: 3}
       propertyPath: m_Name
-      value: Tile
+      value: Renderer
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 261db831a577ff24299eecafe65efe23, type: 3}
       propertyPath: m_Layer

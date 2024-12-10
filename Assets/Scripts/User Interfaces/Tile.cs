@@ -25,7 +25,7 @@ public class Tile : MonoBehaviour
 
     // Camera
     [SerializeField] private Camera _camera;
-    private float _cameraDistance = 5f;
+    [SerializeField] private float _cameraDistance = 5f;
     private Transform _mainCamera;
 
     private void Awake()
@@ -56,8 +56,9 @@ public class Tile : MonoBehaviour
     #region Renderer
     private void UpdateCameraPosition()
     {
-        _camera.transform.position = _tile.position - _mainCamera.forward * _cameraDistance;
-        _camera.transform.rotation = _mainCamera.rotation;
+        Vector3 lToCamera = Vector3.ProjectOnPlane(-_mainCamera.forward, Vector3.up).normalized + Vector3.up;
+        _camera.transform.position = _tile.position + lToCamera * _cameraDistance;
+        _camera.transform.LookAt(_tile.position);
     }
 
     public void SetTile(ActionTile pActionTile)

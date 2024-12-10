@@ -30,6 +30,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private Quaternion _startRotationPosition;
         private Quaternion _endRotationPosition;
+
         // Movements
         private Vector3 _direction = Vector3.zero;
         private Vector3 _conveyorOffset = Vector3.up * .5f;
@@ -39,7 +40,7 @@ namespace Com.UnBocal.Rush.Tickables
         // Tick Count
         private const int TICK_START_MOVE = 1;
         private const int TICK_COLLISION_WITH_WALL = 2;
-        private const int TICK_COLLISION_WITH_STOP = 2;
+        private const int TICK_COLLISION_WITH_STOP = 1;
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update / Tick
         private void Update() => OnUpdate();
@@ -52,7 +53,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             SetDefaultMotionProperties();
             SetCurve();
-            SetStartMove();
+            SetSpawn();
         }
 
         protected override void SetComponents()
@@ -76,6 +77,21 @@ namespace Com.UnBocal.Rush.Tickables
             _collisionDetector.Falling.AddListener(OnFalling);
             _collisionDetector.Land.AddListener(OnLand);
         }
+
+        protected override void DisconnectEvent()
+        {
+            base.DisconnectEvent();
+            _collisionDetector.CollisionWall.RemoveListener(OnWallCollision);
+            _collisionDetector.CollisionCube.RemoveListener(OnCubeCollision);
+            _collisionDetector.CollisionArrow.RemoveListener(OnArrowCollision);
+            _collisionDetector.CollisionStopper.RemoveListener(OnStopperCollision);
+            _collisionDetector.CollisionTeleporter.RemoveListener(OnTeleporterCollision);
+            _collisionDetector.CollisionConveyor.RemoveListener(OnConveyorCollision);
+            _collisionDetector.Stuck.RemoveListener(SetStuck);
+            _collisionDetector.OutCollisionConveyor.RemoveListener(OnConveyorOut);
+            _collisionDetector.Falling.RemoveListener(OnFalling);
+            _collisionDetector.Land.RemoveListener(OnLand);
+        }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
@@ -91,8 +107,8 @@ namespace Com.UnBocal.Rush.Tickables
         private void OnWallCollision(Vector3 pDirection) => SetStartMoveAfterWall(pDirection);
 
         private void OnStopperCollision() => SetStuck(TICK_COLLISION_WITH_STOP);
-        
-        private void OnTeleporterCollision(Vector3 p_newPosition) => ChangeStartPotition(p_newPosition);
+
+        private void OnTeleporterCollision(Vector3 p_newPosition) => SetTeleportation(p_newPosition);
 
         private void OnConveyorCollision(Vector3 pDirection) => SetConveyor(pDirection);
 
@@ -107,8 +123,9 @@ namespace Com.UnBocal.Rush.Tickables
         #region Set States
         private void SetSpawn()
         {
+            Game.Properties.CubeSpawn();
             OnUpdate = UpdateStuck;
-            OnTick = TickSpawn;
+            OnTick = SetStartMove;
         }
 
         private void SetStartMove() => SetStartMove(_direction);
@@ -161,6 +178,14 @@ namespace Com.UnBocal.Rush.Tickables
             OnUpdate = UpdateSlide;
         }
 
+        private void SetTeleportation(Vector3 p_newPosition)
+        {
+            ChangeEndPotition(p_newPosition);
+
+            OnTick = TickTeleportationIn;
+            OnUpdate = UpdateStuck;
+        }
+
         #endregion
         
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Update States
@@ -186,6 +211,7 @@ namespace Com.UnBocal.Rush.Tickables
             float l_PositionMultiplyer = Mathf.Floor(l_ratio);
             Vector3 l_PositionOffset = _direction * ((l_ratioOutofBounds ? 0 : l_PositionMultiplyer) + .5f);
 
+            // Lerp Cube Rotation
             // Lerp Cube Rotation
             Quaternion l_rotationCube = Quaternion.LerpUnclamped(_startRotation, _endRotation, l_ratio);
             // Lerp Cube Position 
@@ -216,14 +242,23 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void TickStartMove() => SetMove();
 
-        private void TickMove()
-        {
-            UpdateNextPositionAndRotation();
-        }
+        private void TickMove() => UpdateNextPositionAndRotation();
 
         private void TickConveyor() => UpdateNextPosition(_conveyorDirection);
 
         private void TickFalling() => UpdateNextPosition(Vector3.down);
+
+        private void TickTeleportationIn()
+        {
+            OnTick = TickTeleportationOut;
+            m_transform.position = _startPosition;
+        }
+
+        private void TickTeleportationOut()
+        {
+            SetStartMove();
+            m_transform.position = _endPosition;
+        }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Utilities
@@ -234,8 +269,10 @@ namespace Com.UnBocal.Rush.Tickables
             _startPosition = _endPosition;
             _endPosition = _startPosition + pDirection.Round();
 
-            // Apply The Movement
-            m_transform.position = _endPosition;
+            m_transform.position = _startPosition + Vector3.up * .5f;
+
+            // Debug
+            Debug.DrawLine(_startPosition, _endPosition, Color.green, 1f);
         }
 
         private void UpdateNextRotation()
@@ -265,21 +302,31 @@ namespace Com.UnBocal.Rush.Tickables
             _rotationAxis = Quaternion.AngleAxis(Game.Properties.ROTATION, Vector3.up) * _direction;
         }
 
-        private void ChangeStartPotition(Vector3 p_newPosition)
+        private void ChangeEndPotition(Vector3 p_newPosition)
         {
-            SetStuck(2);
+            _startPosition = _endPosition;
             _endPosition = p_newPosition;
-            m_transform.position = p_newPosition + Vector3.up * .5f;
         }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setters
         #region Setters
+
+        public void ResetMovementProperties()
+        {
+            _direction = Vector3.zero;
+            OnStart();
+            SetStartMove();
+        }
+
         private void SetDefaultMotionProperties()
         {
             _endPosition = _startPosition = m_transform.position + Vector3.down * .5f;
             _endRotation = _startRotation = m_transform.rotation;
             _direction = _direction == Vector3.zero ? m_transform.forward : _direction;
+
+            print($"{name} -> {_endPosition}");
+
         }
 
         private void SetCurve()

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class CameraRotate : MonoBehaviour
+public class CameraRotate : CameraBehaviour
 {
     // Rotation
     private Transform _transform;
@@ -27,7 +27,7 @@ public class CameraRotate : MonoBehaviour
     {
         _transform = transform;
         _transform.position = -Vector3.forward;
-        _distance = _distanceMin;
+        _distance = _distanceMax;
     }
 
     private void Update()

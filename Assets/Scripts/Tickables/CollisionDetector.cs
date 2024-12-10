@@ -23,6 +23,7 @@ namespace Com.UnBocal.Rush.Tickables
         [HideInInspector] public UnityEvent Land = new UnityEvent();
 
         // Components
+        private JuicyCapter _juicyCapter;
         private BoxCollider _collider;
         private Rigidbody _body;
         private Rolling _rolling;
@@ -39,26 +40,20 @@ namespace Com.UnBocal.Rush.Tickables
         private RaycastHit _hit;
         private Vector3 _direction;
         private Vector3 _groundDirection = Vector3.down;
-        private Vector3 _offset = Vector3.up * 0f;
         private bool _needSideCheck = false;
         private bool _isGrounded = false;
         private bool _isOnConveyor = false;
 
         // Positions
+        private bool _CubeDidntMove => _lastPosition == m_transform.position;
         private Vector3 _lastPosition = default;
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         #region Initialization
-        protected override void OnStart()
-        {
-            base.OnStart();
-            SetDeleteOnStopRunning(true);
-            SetCubeCollisionProperties();
-        }
-
         protected override void SetComponents()
         {
             base.SetComponents();
+            _juicyCapter = GetComponent<JuicyCapter>();
             _collider = GetComponent<BoxCollider>();
             _body = GetComponent<Rigidbody>();
             _rolling = GetComponent<Rolling>();
@@ -86,7 +81,7 @@ namespace Com.UnBocal.Rush.Tickables
         {
             _needSideCheck = true;
             if (!GroundCollision()) return;
-            if (CubeDidntMove()) return;
+            if (_CubeDidntMove) return;
             // Cube Behavior Based on The Collisiond
             switch (_hit.collider.tag)
             {
@@ -105,7 +100,11 @@ namespace Com.UnBocal.Rush.Tickables
             _isGrounded = LaunchRaycast(_groundDirection, _GroundLayer);
 
             if (!_isGrounded) Falling.Invoke();
-            else if (Mathf.Abs((_lastPosition - m_transform.position).y) > FALLING_DISTANCE_MIN) Land.Invoke();
+            else
+            {
+                if (Mathf.Abs((_lastPosition - m_transform.position).y) > FALLING_DISTANCE_MIN) Land.Invoke();
+                JuiceOnCollider();   
+            }
             return _isGrounded;
         }
 
@@ -114,7 +113,10 @@ namespace Com.UnBocal.Rush.Tickables
             if (!_hit.collider.TryGetComponent(out Typable _GoalTypable)) return;
             if (_GoalTypable.CubeType != _typable.CubeType) return;
             Destroy(gameObject);
+            JuiceOnCollider(3);
+            Game.Properties.CubeDies();
         }
+
         private void OnCollisionArrow()
         {
             ResetGroundProperties();
@@ -147,9 +149,11 @@ namespace Com.UnBocal.Rush.Tickables
         private void OnCollisionTeleporter()
         {
             ResetGroundProperties();
-            if (CubeDidntMove()) return;
+            if (_CubeDidntMove) return;
+            WaitFor(2);
             _needSideCheck = false;
             CollisionTeleporter.Invoke(_hit.collider.GetComponent<Teleporter>().TeleportPosition);
+            UpdateCubePosition();
         }
 
         private void ResetGroundProperties()
@@ -201,10 +205,12 @@ namespace Com.UnBocal.Rush.Tickables
         {
             if (_collisionDetected) return false;
             // Don't Launch The Event If The Cube Has Nothing On It's Way
-            if (pDirectionIndex <= 0 || _isOnConveyor) return true;
+            if (pDirectionIndex <= 0 || _isOnConveyor) { CollisionArrow.Invoke(_direction); return true; }
             // Reset Conveyor Movement
 
             CollisionWall.Invoke(_direction);
+            _juicyCapter.Shake();
+
             return true;
         }
 
@@ -221,16 +227,7 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Cube Collision
         #region Cube Collision
 
-        private void SetCubeCollisionProperties()
-        {
-            _body.isKinematic = true;
-            _collider.isTrigger = true;
-            _collider.size = Vector3.one * .7f;
-            // _collider.includeLayers = _CubeLayer;
-            // _collider.excludeLayers = _SideLayer;
-        }
-
-        private void OnTriggerEnter(Collider other)
+        private void OnTriggerStay(Collider other)
         {
             Time.timeScale = .1f;
             other.transform.position += Vector3.up;
@@ -241,16 +238,15 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Motion Properties
         #region Motion Properties
         private void UpdateCubePosition() => _lastPosition = m_transform.position;
-
-        private bool CubeDidntMove() => _lastPosition == m_transform.position;
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Raycast
         #region Raycasts
+
         private bool LaunchRaycast(Vector3 pDirection, LayerMask pLayer, Color pColor)
         {
             _hit = default;
-            Vector3 l_position = m_transform.position + _offset;
+            Vector3 l_position = m_transform.position;
             // Debug
             Debug.DrawLine(l_position, l_position + pDirection * RAYCAST_LENGTH, pColor, DEBUG_RAY_DURATION);
 
@@ -259,6 +255,15 @@ namespace Com.UnBocal.Rush.Tickables
 
         private bool LaunchRaycast(Vector3 pDirection, LayerMask pLayer) => LaunchRaycast(pDirection, pLayer, Color.red);
         #endregion
+
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Juice
+        private void JuiceOnCollider(int pIteration = 1)
+        {
+            if (!_hit.collider.TryGetComponent(out JuicyCapter lJT)) return;
+            if (pIteration > 1) lJT.StartShake(pIteration);
+            else lJT.Shake();
+        }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Setter
         public void SetLayer(LayerMask pCubeLayer, LayerMask pSideLayer, LayerMask pGroundLayer)

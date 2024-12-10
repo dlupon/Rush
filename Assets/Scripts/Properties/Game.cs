@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -10,8 +11,11 @@ namespace Com.UnBocal.Rush.Properties
         public static class Events
         {
             // Game
+            public static UnityEvent ToggleRuning = new UnityEvent();
             public static UnityEvent Running = new UnityEvent();
             public static UnityEvent StopRunning = new UnityEvent();
+            public static UnityEvent End = new UnityEvent();
+            public static UnityEvent<Transform> LevelLoaded = new UnityEvent<Transform>();
 
             // Tick
             public static UnityEvent FirstTick = new UnityEvent();
@@ -19,26 +23,33 @@ namespace Com.UnBocal.Rush.Properties
             public static UnityEvent DemiTick = new UnityEvent();
             
             // Level
-            public static UnityEvent<Properties.ActionTile[]> ActionTilesUpdated = new UnityEvent<Properties.ActionTile[]>();   
+            public static UnityEvent<Properties.ActionTile[]> ActionTilesUpdated = new UnityEvent<Properties.ActionTile[]>();
 
-            // Hud
+            // Hud / Tile Placer
             public static UnityEvent<Properties.ActionTile> TileSelected = new UnityEvent<Properties.ActionTile>();
+            public static UnityEvent<Transform> TilePlaced = new UnityEvent<Transform>();
+            public static UnityEvent<Vector3> LevelTouched = new UnityEvent<Vector3>();
         }
 
         public static class Properties
         {
             #region Variables
             // Getters
-            //  // Game
-            public static bool Running => _running;
             //  // Screen
             public static Vector2Int ScreenSizeWithPixelization => GetScreenSizeWithPixelization();
             public static Vector2Int ScreenSize => GetScreenSize();
             public static float ScreenPixelizedRatio => ScreenSizeWithPixelization.magnitude / ScreenSize.magnitude;
             //  // Tick
+            public static float SpeedMin => .25f;
+            public static float SliderValue = 0f;
             public static float TickRatio => _tickRatio;
 
             // Game
+            public static Transform CurrentLevel => _currentLevel;
+            private static Transform _currentLevel;
+            public static int CubeCount => _cubeCount;
+            private static int _cubeCount;
+            public static bool Running => _running;
             private static bool _running = false;
 
             // Screen Pixelization
@@ -56,20 +67,50 @@ namespace Com.UnBocal.Rush.Properties
             // Collision
             private const string LAYER_CUBE = "Cube";
             private const string LAYER_TILE = "Tile";
+            private const string LAYER_ACTIONTILE = "ActionTile";
             private const string LAYER_IGNORE = "Ignore";
             public static LayerMask LayerCube => LayerMask.NameToLayer(LAYER_CUBE);
             public static LayerMask LayerTile => LayerMask.NameToLayer(LAYER_TILE);
+            public static LayerMask LayerActionTile => LayerMask.NameToLayer(LAYER_ACTIONTILE);
             public static LayerMask LayerIgnore => LayerMask.NameToLayer(LAYER_IGNORE);
 
             // Tiles
             public enum CubeType { WHITE, BLUE, GREEN, RED, ORANGE, PINK }
             public static ActionTile[] CurrentActionTiles => _currentActionTiles;
             private static ActionTile[] _currentActionTiles;
-            [Serializable] public struct ActionTile
+            [Serializable] public class ActionTile
             {
+                public int MaxCount => _maxCount;
+                public bool CanPlaceNewTile => Tiles.Count < _maxCount;
+                public List<Transform> Tiles => CreateTilesist();
+
+                [SerializeField] private int _maxCount;
                 public GameObject Factory;
                 public Orientation Direction;
-                public int Count;
+
+                private List<Transform> _tiles;
+
+                private List<Transform> CreateTilesist()
+                {
+                    if (_tiles != null) return _tiles;
+                    return _tiles = new List<Transform>();
+                }
+
+                public void AddTile(Transform pTile)
+                {
+                    if (ContainsTile(pTile)) return;
+                    _tiles.Add(pTile);
+                }
+
+                public void RemoveTile(GameObject pTile) => RemoveTile(pTile.transform);
+
+                public void RemoveTile(Transform pTile)
+                {
+                    if (!ContainsTile(pTile)) return;
+                    _tiles.Remove(pTile);
+                }
+
+                public bool ContainsTile(Transform _tile) => _tiles.Contains(_tile);
             }
             #endregion
 
@@ -105,12 +146,31 @@ namespace Com.UnBocal.Rush.Properties
             // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Game
             #region Game
             public static bool ToggleRunning() => SetRunning(!_running);
+
             public static bool SetRunning(bool pRunning)
             {
                 _running = pRunning;
                 if (_running) Events.Running.Invoke();
                 else Events.StopRunning.Invoke();
                 return _running;
+            }
+
+            public static void SetLevel(Transform pLevel)
+            {
+                _currentLevel = pLevel;
+
+                Debug.Log($"{_currentLevel.name} loaded");
+
+                Events.LevelLoaded.Invoke(_currentLevel);
+            }
+
+            public static void CubeSpawn() => _cubeCount++;
+
+            public static void CubeDies()
+            {
+                --_cubeCount;
+                if (_cubeCount > 0) return;
+                Events.End.Invoke();
             }
             #endregion
 
@@ -173,6 +233,16 @@ namespace Com.UnBocal.Rush.Properties
             pVector.x = Mathf.Round(pVector.x);
             pVector.y = Mathf.Round(pVector.y);
             pVector.z = Mathf.Round(pVector.z);
+            return pVector;
+        }
+
+        public static Vector3 Multiply(this Vector3 pVector, float pX, float pY, float pZ) => pVector.Multiply(new Vector3(pX, pY, pZ));
+
+        public static Vector3 Multiply(this Vector3 pVector, Vector3 pMultiplyer)
+        {
+            pVector.x *= pMultiplyer.x;
+            pVector.y *= pMultiplyer.y;
+            pVector.z *= pMultiplyer.z;
             return pVector;
         }
 

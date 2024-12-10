@@ -1,6 +1,7 @@
 using Com.UnBocal.Rush.Properties;
 using DG.Tweening;
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -11,8 +12,10 @@ namespace Com.UnBocal.Rush.Tickables
         // Components
         [SerializeField] private Transform _transformRenderer;
         private GameObject _gameObject;
-        private Collider _collider;
         private Typable _typable;
+        private Collider _collider;
+        private Rolling _rolling;
+        private CollisionDetector _collisionDetector;
 
         // Tick
         private Action OnTick;
@@ -22,15 +25,9 @@ namespace Com.UnBocal.Rush.Tickables
 
         // Spawner
         [SerializeField] private GameObject _cubeFactory;
-        [SerializeField] [Tooltip("0 -> No Spawn\n1 -> Forward\n2 -> Right\n3 -> Back\n4 -> Left")] private int[] _spawningRate;
+        [SerializeField][Tooltip("0 -> No Spawn\n1 -> Forward\n2 -> Right\n3 -> Back\n4 -> Left")] private int[] _spawningRate;
         [SerializeField] private bool _isCube = false;
         private int _spawningCount = 0;
-
-        // Collision
-        [SerializeField] private LayerMask _cubeLayer = default;
-        [SerializeField] private LayerMask _sideLayer = default;
-        [SerializeField] private LayerMask _groundLayer = default;
-        private LayerMask _defaultLayer = default;
 
         // Recovery
         private Vector3 _recoveryPosition;
@@ -42,9 +39,8 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         protected override void OnStart()
         {
-            GetComponent<ChangeColorMaterial>().SetMaterialColor(_materialColors);
             SetRecoveryProperties();
-            Setpause();
+            SetPause();
         }
 
         protected override void SetComponents()
@@ -52,6 +48,8 @@ namespace Com.UnBocal.Rush.Tickables
             base.SetComponents();
             _gameObject = gameObject;
             _typable = GetComponent<Typable>();
+            _rolling = GetComponent<Rolling>();
+            _collisionDetector = GetComponent<CollisionDetector>();
         }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
@@ -60,11 +58,10 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Spawn()
         {
-            if (!_debugSpawning) return;
-            if (_spawningCount >= _spawningRate.Length) { StopSpawning();  return; }
+            if (_spawningCount >= _spawningRate.Length) { StopSpawning(); return; }
             if (_spawningRate[_spawningCount] != 0)
             {
-                if (_spawningCount == _spawningRate.Length - 1 && _isCube) SpawnCube(SetAsCube());
+                if (_spawningCount == _spawningRate.Length - 1 && _isCube) { SpawnCube(SetAsCube()); return; }
                 else SpawnCube();
             }
             _spawningCount++;
@@ -80,47 +77,39 @@ namespace Com.UnBocal.Rush.Tickables
         {
             Vector3 lDirection = Quaternion.AngleAxis(Game.Properties.ROTATION * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.forward;
             pCurrentCube.GetComponent<Rolling>().SetDirection(lDirection);
-
-            if (pCurrentCube.TryGetComponent(out ChangeColorMaterial lCurrentChangeColorMaterial))
-                lCurrentChangeColorMaterial.SetMaterialColor(_materialColors);
         }
 
         private void SpawnCube()
         {
             Transform _currentCube = Instantiate(_cubeFactory, m_transform.position, transform.rotation).transform;
             _currentCube.GetComponent<Typable>().SetCubeType(_typable.CubeType);
+
             SpawnCube(_currentCube);
         }
 
 
         private Transform SetAsCube()
         {
-            m_transform.DOScale(Vector3.one, 1f).SetEase(Ease.OutBack);
-
-            CollisionDetector _CollisionComponent = _gameObject.AddComponent<CollisionDetector>();
-            Rolling _rollingComponent = _gameObject.AddComponent<Rolling>();
-            _rollingComponent.SetRenderer(_transformRenderer);
             _gameObject.layer = Game.Properties.LayerCube;
-            _CollisionComponent.SetLayer(_cubeLayer, _sideLayer, _groundLayer);
 
-            _CollisionComponent.SetDeleteOnStopRunning(true);
-            _rollingComponent.SetDeleteOnStopRunning(true);
+            _rolling.ResetMovementProperties();
+
             StopSpawning();
-            
+
             return m_transform;
         }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // On Running
         #region On Running
-        protected override void OnStopRunning() => Setpause();
+        protected override void OnStopRunning() { SetPause(); print("SetPause"); }
 
-        protected override void OnRunning() => SetSpawn();
+        protected override void OnRunning() { SetSpawn(); print("SetSpawn"); }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
         #region Set States
-        private void Setpause()
+        private void SetPause()
         {
             Recovery();
             OnTick = Wait;
@@ -129,14 +118,26 @@ namespace Com.UnBocal.Rush.Tickables
         private void SetSpawn()
         {
             m_transform.DOKill();
-            m_transform.position = _recoveryPosition;
-            m_transform.rotation = _recoveryRotation;
+
+            Recovery();
+
             _gameObject.layer = Game.Properties.LayerIgnore;
             _spawningCount = 0;
+
+
             OnTick = Spawn;
         }
 
         private void StopSpawning() => OnTick = Wait;
+
+        private void SetCubeBehaviorOn(bool pOn)
+        {
+            return;
+            _rolling.enabled = pOn;
+            _rolling.SetListening(pOn);
+            _collisionDetector.enabled = pOn;
+            _collisionDetector.SetListening(pOn);
+        }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Recovery
@@ -149,7 +150,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Recovery()
         {
-            m_transform.DOMove(_recoveryPosition, 1f).From(_recoveryPosition + Vector3.down).SetEase(Ease.OutExpo);
+            m_transform.position = _recoveryPosition;
             m_transform.rotation = _recoveryRotation;
         }
         #endregion

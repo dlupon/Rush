@@ -6,7 +6,9 @@ namespace Com.UnBocal.Rush.Managers
     public class TickManager : MonoBehaviour
     {
         // Ticks
-        [SerializeField, Range(.1f, 15f)] private float _tickPerSecond = 1;
+        [SerializeField, Range(.1f, 15f)] private float _tickPerSecond = 3;
+        [SerializeField, Range(1, 5f)] private float _tickAdditionalSpeed = 1;
+        private float _tickDefaultSpeed = 1f;
         private int _tickCount = default;
 
         private const float TICK_DURATION = 1f;
@@ -30,7 +32,7 @@ namespace Com.UnBocal.Rush.Managers
 
         private void UpdateTimeTick()
         {
-            if (_time < 1) _time += _tickPerSecond * Time.deltaTime;
+            if (_time < 1) _time += _tickPerSecond * (_tickDefaultSpeed + _tickAdditionalSpeed * Game.Properties.SliderValue) * Time.deltaTime;
             else _time = 1f;
             Game.Properties.SetTickRatio(_tickRatio = _time / TICK_DURATION);
         }

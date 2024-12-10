@@ -1,18 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UiManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    // Components
+    private CanvasScaler _scaler;
+
+    private void Awake()
     {
-        
+        SetComponents();
+        SetResolution();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void SetComponents()
     {
-        
+        _scaler = GetComponent<CanvasScaler>();
+    }
+
+    private void SetResolution()
+    {
+        if (Application.platform == RuntimePlatform.Android) _scaler.scaleFactor = 2;
     }
 }

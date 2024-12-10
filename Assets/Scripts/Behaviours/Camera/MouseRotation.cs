@@ -1,7 +1,8 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CameraMouseRotation : MonoBehaviour
+public class CameraMouseRotation : CameraBehaviour
 {
     private Camera _camera;
 
