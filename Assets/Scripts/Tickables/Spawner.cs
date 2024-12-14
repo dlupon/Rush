@@ -25,16 +25,15 @@ namespace Com.UnBocal.Rush.Tickables
 
         // Spawner
         [SerializeField] private GameObject _cubeFactory;
+        [SerializeField] private int _spawnLoop = 1;
         [SerializeField][Tooltip("0 -> No Spawn\n1 -> Forward\n2 -> Right\n3 -> Back\n4 -> Left")] private int[] _spawningRate;
         [SerializeField] private bool _isCube = false;
         private int _spawningCount = 0;
+        private int _spawningLoopCount = 0;
 
         // Recovery
         private Vector3 _recoveryPosition;
         private Quaternion _recoveryRotation;
-
-        // Debug
-        [SerializeField] private bool _debugSpawning = true;
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         protected override void OnStart()
@@ -58,13 +57,14 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Spawn()
         {
-            if (_spawningCount >= _spawningRate.Length) { StopSpawning(); return; }
+            if (_spawningLoopCount > _spawnLoop || _spawningLoopCount >= _spawningRate.Length) { StopSpawning(); return; }
             if (_spawningRate[_spawningCount] != 0)
             {
                 if (_spawningCount == _spawningRate.Length - 1 && _isCube) { SpawnCube(SetAsCube()); return; }
                 else SpawnCube();
             }
-            _spawningCount++;
+
+            if (++_spawningCount >= _spawningRate.Length) { _spawningLoopCount++; _spawningCount = 0; }
             WaitFor(2);
         }
 
@@ -123,7 +123,7 @@ namespace Com.UnBocal.Rush.Tickables
 
             _gameObject.layer = Game.Properties.LayerIgnore;
             _spawningCount = 0;
-
+            _spawningLoopCount = 0;
 
             OnTick = Spawn;
         }

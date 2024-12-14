@@ -11,8 +11,20 @@ public class CameraBehaviour : MonoBehaviour
             lBehaviour.SetOn(lBehaviour == this);
     }
 
-    public void SetOn(bool pOn)
+    public bool SetOn(bool pOn)
     {
-        enabled = pOn;
+        if (pOn) OnActive();
+        else OnUnActive();
+        return enabled = pOn;
+    }
+
+    protected virtual void OnActive()
+    {
+
+    }
+
+    protected virtual void OnUnActive()
+    {
+
     }
 }

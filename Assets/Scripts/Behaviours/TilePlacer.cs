@@ -19,6 +19,7 @@ public class TilePlacer : MonoBehaviour
     private Vector3 _offsetOnPlacing = Vector3.up * .6f;
 
     // Raycast
+    private enum ColliderType { None, Tile, Other }
     private const float RAYCAST_MAX_DISTANCE = 100f;
     private Ray _raycast;
     private RaycastHit _hit;
@@ -106,7 +107,7 @@ public class TilePlacer : MonoBehaviour
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Placing / Removing
     private void CheckPlacingTile()
     {
-        if (!_actionTile.CanPlaceNewTile) return;
+        if (!(_actionTile.CanPlaceNewTile && CheckAboveTile() == ColliderType.None)) return;
         PlacingTile();
         SetNewTile();
     }
@@ -133,7 +134,6 @@ public class TilePlacer : MonoBehaviour
         Destroy(_hit.collider.gameObject);
     }
 
-
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // RayCast
     private void UpdateRaycast()
     {
@@ -144,5 +144,15 @@ public class TilePlacer : MonoBehaviour
         // if (_hit.collider.gameObject.tag != "Tile" && !Game.Properties.Running) { _hitFound = false; return; }
 
         _HitColliderTrasnform = _hit.collider.transform;
+    }
+
+    private ColliderType CheckAboveTile()
+    {
+        Vector3 lPosition = _HitColliderTrasnform.position;
+        bool lHitFound = Physics.Raycast(lPosition, Vector3.up, out RaycastHit lHit, 1f);
+        if (!lHitFound) return ColliderType.None;
+        if (lHit.collider.gameObject.layer == Game.Properties.LayerIgnore) return ColliderType.None;
+        if (lHit.collider.gameObject.layer == Game.Properties.LayerTile) return ColliderType.Tile;
+        return ColliderType.Other;
     }
 }

@@ -56,7 +56,7 @@ public class Tile : MonoBehaviour
     #region Renderer
     private void UpdateCameraPosition()
     {
-        Vector3 lToCamera = Vector3.ProjectOnPlane(-_mainCamera.forward, Vector3.up).normalized + Vector3.up;
+        Vector3 lToCamera = Vector3.ProjectOnPlane(-_mainCamera.forward, _mainCamera.up).normalized + Vector3.up;
         _camera.transform.position = _tile.position + lToCamera * _cameraDistance;
         _camera.transform.LookAt(_tile.position);
     }

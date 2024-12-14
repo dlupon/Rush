@@ -1,10 +1,14 @@
+using UnityEditor.Timeline;
 using UnityEngine;
 
 public class CameraRotate : CameraBehaviour
 {
+    // Components
+    private TilePlacer _tilePlacer;
+
     // Rotation
     private Transform _transform;
-    private Transform _targetTransform;
+    [SerializeField] private Transform _targetTransform;
 
     // Inputs
     private Vector3 _inputLastPosition = default;
@@ -23,11 +27,10 @@ public class CameraRotate : CameraBehaviour
     [SerializeField] private float _distanceSpeed = 10f;
     private float _distance = 0f;
 
-    private void Start()
+    private void Awake()
     {
-        _transform = transform;
-        _transform.position = -Vector3.forward;
-        _distance = _distanceMax;
+        SetComponents();
+        SetDefaultProperties();
     }
 
     private void Update()
@@ -35,6 +38,19 @@ public class CameraRotate : CameraBehaviour
         UpdateInput();
         RotateOnInput();
         DistanceOnInput();
+    }
+
+    private void SetComponents()
+    {
+        _transform = transform;
+        _tilePlacer = GetComponent<TilePlacer>();
+    }
+
+    private void SetDefaultProperties()
+    {
+        _distance = _distanceMax;
+        _transform.position = Vector3.back * _distance;
+        _transform.LookAt(_targetTransform);
     }
 
     private void UpdateInput()
@@ -60,5 +76,17 @@ public class CameraRotate : CameraBehaviour
         _distance = Mathf.Clamp(_distance - _inputScroll, _distanceMin, _distanceMax);
         Vector3 l_toCamera = _transform.position.normalized;
         _transform.position = Vector3.Lerp(_transform.position, l_toCamera * _distance, _distanceSpeed * Time.deltaTime);
+    }
+
+    protected override void OnActive()
+    {
+        _tilePlacer.enabled = true;
+        _transform.position = Vector3.back * _distance;
+        _transform.LookAt(_targetTransform);
+    }
+
+    protected override void OnUnActive()
+    {
+        _tilePlacer.enabled = false;
     }
 }

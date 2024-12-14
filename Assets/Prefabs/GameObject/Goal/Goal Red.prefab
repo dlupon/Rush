@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1838032634844515272, guid: 97ae38d37551df4409b2da7379a67813, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 31a1e9cc644641b40b12341c06928f81, type: 2}
     - target: {fileID: 2400296309198809871, guid: 97ae38d37551df4409b2da7379a67813, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -53,6 +57,10 @@ PrefabInstance:
       value: Goal Red
       objectReference: {fileID: 0}
     - target: {fileID: 4250371055051405643, guid: 97ae38d37551df4409b2da7379a67813, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 31a1e9cc644641b40b12341c06928f81, type: 2}
+    - target: {fileID: 4253431748793551280, guid: 97ae38d37551df4409b2da7379a67813, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 31a1e9cc644641b40b12341c06928f81, type: 2}

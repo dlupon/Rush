@@ -35,13 +35,13 @@ public class JuicyCapter : MonoBehaviour
     }
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Spawn
-    public void Spawn(float pDuration, float pDelay)
+    public void Spawn(float pDuration, float pDelay, Vector3 pFrom)
     {
         pDelay += Random.value * .6f;
 
-        _transformRenderer.DOMoveZ(_transformRenderer.position.z, pDuration).From(Vector3.down * 3f).SetEase(Ease.OutExpo).SetDelay(pDelay);
-        _transformRenderer.DOMoveX(_transformRenderer.position.x, pDuration).From(Vector3.down * 3f).SetEase(Ease.OutExpo).SetDelay(pDelay);
-        _transformRenderer.DOMoveY(_transformRenderer.position.y, pDuration * 2f).From(Vector3.down * 7f).SetEase(Ease.OutElastic).SetDelay(pDelay);
+        _transformRenderer.DOMoveZ(_transformRenderer.position.z, pDuration).From(pFrom).SetEase(Ease.OutExpo).SetDelay(pDelay);
+        _transformRenderer.DOMoveX(_transformRenderer.position.x, pDuration).From(pFrom).SetEase(Ease.OutExpo).SetDelay(pDelay);
+        _transformRenderer.DOMoveY(_transformRenderer.position.y, pDuration * 2f).From(pFrom).SetEase(Ease.OutElastic).SetDelay(pDelay);
         _transformRenderer.DOScale(pDuration, 1f).From(Vector3.zero).SetEase(Ease.OutElastic).SetDelay(pDelay);
         _transformRenderer.DOShakeRotation(pDuration, 10f).SetEase(Ease.OutExpo).SetDelay(pDelay + .5f);
 
@@ -60,6 +60,14 @@ public class JuicyCapter : MonoBehaviour
     {
         _transformRenderer.DOShakeScale(pDuration, .1f).SetEase(Ease.OutExpo).SetDelay(pDelay );
         _transformRenderer.DOShakeRotation(pDuration, 5f).SetEase(Ease.OutExpo).SetDelay(pDelay ).onComplete = Reset;
+    }
+
+    public void Corrupt(float pDuration, float pDelay)
+    {
+        pDelay += - .25f + .5f * Random.value;
+
+        _transformRenderer.DOShakeScale(pDuration, .5f).SetEase(Ease.OutExpo).SetDelay(pDelay);
+        _transformRenderer.DOShakeRotation(pDuration, 10f).SetEase(Ease.OutExpo).SetDelay(pDelay).onComplete = Reset;
     }
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Motion

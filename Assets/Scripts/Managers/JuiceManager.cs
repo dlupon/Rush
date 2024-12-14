@@ -143,7 +143,7 @@ public class JuiceManager : MonoBehaviour
             lDistanceFromCenter = (pCapter.transform.position - _currentLevel.position).magnitude;
             lDelay = lDistanceFromCenter * pDistanceMultiplyer + (lSpawnTotalDuration + lPreLaunchTotalDuration) * .75f;
 
-            pCapter.Spawn(lTileSpawnAnimationDuration, lDelay);
+            pCapter.Spawn(lTileSpawnAnimationDuration, lDelay, _folder.position + _folder.up * lScaleFactor);
         }
         #endregion
 
@@ -152,12 +152,12 @@ public class JuiceManager : MonoBehaviour
         float lDelayIDK = 2f;
         float lFolderDespawnTotalDuration = 2f;
         Vector3 lEndScale = Vector3.zero;
-        Vector3 lFoldEndRotation = Vector3.up * 5f;
+        Quaternion lFoldEndRotation = Quaternion.AngleAxis(180f, Vector3.up) * _folder.rotation;
 
         _folder.DORotate(_folder.eulerAngles, lFolderDespawnTotalDuration * .5f).SetEase(Ease.OutElastic).SetDelay(lDelay + lDelayIDK * .5f);
         _folder.DOScale(lDefaultScale, lFolderDespawnTotalDuration * .5f).SetEase(Ease.OutElastic).SetDelay(lDelay + lDelayIDK * .5f);
 
-        _folder.DORotate(lFoldEndRotation, lFolderDespawnTotalDuration * .75f, RotateMode.Fast).SetEase(Ease.InBack).SetDelay(lDelay + lDelayIDK * .75f);
+        _folder.DORotateQuaternion(lFoldEndRotation, lFolderDespawnTotalDuration * .75f).SetEase(Ease.InBack).SetDelay(lDelay + lDelayIDK * .75f);
 
         _folder.DOMove(lSpawnPositionStart, lFolderDespawnTotalDuration).SetEase(Ease.InBack).SetDelay(lDelay + lDelayIDK * .5f);
         _folder.DOScale(lEndScale, lFolderDespawnTotalDuration * .5f).SetEase(Ease.InBack).SetDelay(lDelay + lDelayIDK);
@@ -176,7 +176,7 @@ public class JuiceManager : MonoBehaviour
         foreach (JuicyCapter pCapter in _currentLevelObjects)
         {
             lDistanceFromCenter = (pCapter.transform.position - pFrom).magnitude;
-            pCapter.Wave(1f, lDistanceFromCenter * .1f);
+            pCapter.Corrupt(1f, lDistanceFromCenter * .1f);
         }
     }
 

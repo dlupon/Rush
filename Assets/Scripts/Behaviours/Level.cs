@@ -1,18 +1,19 @@
 using UnityEngine;
 using Com.UnBocal.Rush.Properties;
+using TMPro;
 
 public class Level : MonoBehaviour
 {
     [SerializeField] private Game.Properties.ActionTile[] _actionTiles;
 
-    // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
-    private void Start()
+    // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Load
+    public void Launch()
     {
         SetActionTiles();
         SetLevel();
+        Game.Properties.InGame = true;
     }
 
-    // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
     private void SetActionTiles()
     {
         Game.Properties.SetCurrentActionTiles(_actionTiles);
@@ -20,6 +21,7 @@ public class Level : MonoBehaviour
 
     private void SetLevel()
     {
+        transform.position = Vector3.zero;
         Game.Properties.SetLevel(transform);
     }
 }

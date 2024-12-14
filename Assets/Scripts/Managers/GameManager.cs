@@ -32,6 +32,7 @@ namespace Com.UnBocal.Rush.Managers
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Inputs
         private void UpdateInput()
         {
+            if (!Game.Properties.InGame) return;
             if (Game.Inputs.Run) ToggleRunGame();
         }
 

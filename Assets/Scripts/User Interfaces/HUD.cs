@@ -18,12 +18,6 @@ public class HUD : Interface
     // Animations
     private const float ANIMATION_END_DURATION = 1f;
 
-    // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
-    private void Start()
-    {
-        SelectFirstTile();
-    }
-
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
     protected override void ConnectEvents()
     {
@@ -37,6 +31,8 @@ public class HUD : Interface
     {
         _actionTiles = pActionTiles;
         CreateHud();
+
+        SelectFirstTile();
     }
 
     private void CreateHud()

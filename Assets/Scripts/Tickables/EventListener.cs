@@ -45,6 +45,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private bool CanTick()
         {
+            if (gameObject.activeInHierarchy == false) return false;
             if (--_tickLeft > 0) return _isTicking = false;
             return _isTicking = true;
         }

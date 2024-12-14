@@ -15,15 +15,18 @@ namespace Com.UnBocal.Rush.Properties
             public static UnityEvent Running = new UnityEvent();
             public static UnityEvent StopRunning = new UnityEvent();
             public static UnityEvent End = new UnityEvent();
-            public static UnityEvent<Transform> LevelLoaded = new UnityEvent<Transform>();
+            public static UnityEvent<Properties.ActionTile[]> ActionTilesUpdated = new UnityEvent<Properties.ActionTile[]>();
 
             // Tick
-            public static UnityEvent FirstTick = new UnityEvent();
             public static UnityEvent Tick = new UnityEvent();
-            public static UnityEvent DemiTick = new UnityEvent();
             
             // Level
-            public static UnityEvent<Properties.ActionTile[]> ActionTilesUpdated = new UnityEvent<Properties.ActionTile[]>();
+            public static UnityEvent LaunchLevel = new UnityEvent();
+            public static UnityEvent<int> LevelLoad = new UnityEvent<int>();
+            public static UnityEvent<Transform> LevelLoaded = new UnityEvent<Transform>();
+
+            // Main Menu
+            public static UnityEvent LaunchGame = new UnityEvent();
 
             // Hud / Tile Placer
             public static UnityEvent<Properties.ActionTile> TileSelected = new UnityEvent<Properties.ActionTile>();
@@ -45,12 +48,18 @@ namespace Com.UnBocal.Rush.Properties
             public static float TickRatio => _tickRatio;
 
             // Game
+            public static bool InGame = false;
             public static Transform CurrentLevel => _currentLevel;
             private static Transform _currentLevel;
             public static int CubeCount => _cubeCount;
             private static int _cubeCount;
             public static bool Running => _running;
             private static bool _running = false;
+
+            // Level
+            public static List<GameObject> Levels => _levels;
+            private static List<GameObject> _levels;
+
 
             // Screen Pixelization
             private static Vector2Int _screenSize = Vector2Int.zero;
@@ -176,13 +185,14 @@ namespace Com.UnBocal.Rush.Properties
 
             // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Level
             #region Level
+            public static void SetLevels(List<GameObject> pLevels) => _levels = pLevels;
+
             public static void SetCurrentActionTiles(ActionTile[] pCurrentActionTiles)
             {
                 _currentActionTiles = pCurrentActionTiles;
                 Events.ActionTilesUpdated.Invoke(_currentActionTiles);
             }
             #endregion
-
         }
 
         public static class Inputs
