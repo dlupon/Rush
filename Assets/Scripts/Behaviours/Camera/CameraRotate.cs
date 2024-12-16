@@ -1,4 +1,4 @@
-using UnityEditor.Timeline;
+using Com.UnBocal.Rush.Properties;
 using UnityEngine;
 
 public class CameraRotate : CameraBehaviour
@@ -8,7 +8,6 @@ public class CameraRotate : CameraBehaviour
 
     // Rotation
     private Transform _transform;
-    [SerializeField] private Transform _targetTransform;
 
     // Inputs
     private Vector3 _inputLastPosition = default;
@@ -49,12 +48,10 @@ public class CameraRotate : CameraBehaviour
     private void SetDefaultProperties()
     {
         _distance = _distanceMax;
-        _transform.position = Vector3.back * _distance;
-        _transform.LookAt(_targetTransform);
     }
 
     private void UpdateInput()
-    {
+    { 
         _inputPosition = Input.mousePosition;
         _inputScroll = Input.mouseScrollDelta.y;
 
@@ -67,22 +64,22 @@ public class CameraRotate : CameraBehaviour
     {
         if (!Input.GetMouseButton(1)) return;
 
-        _transform.RotateAround(Vector3.zero , Vector3.up, _speed.x * _inputStrength * _inputDirection.x * Time.deltaTime);
-        _transform.RotateAround(Vector3.zero , transform.right, _speed.y * -_inputStrength * _inputDirection.y * Time.deltaTime);
+        _transform.RotateAround(Game.Properties.Center , Vector3.up, _speed.x * _inputStrength * _inputDirection.x * Time.deltaTime);
+        _transform.RotateAround(Game.Properties.Center, transform.right, _speed.y * -_inputStrength * _inputDirection.y * Time.deltaTime);
     }
 
     private void DistanceOnInput()
     {
         _distance = Mathf.Clamp(_distance - _inputScroll, _distanceMin, _distanceMax);
-        Vector3 l_toCamera = _transform.position.normalized;
-        _transform.position = Vector3.Lerp(_transform.position, l_toCamera * _distance, _distanceSpeed * Time.deltaTime);
+        Vector3 l_toCamera = - _transform.forward;
+        _transform.position = Vector3.Lerp(_transform.position, Game.Properties.Center + l_toCamera * _distance, _distanceSpeed * Time.deltaTime);
     }
 
     protected override void OnActive()
     {
         _tilePlacer.enabled = true;
-        _transform.position = Vector3.back * _distance;
-        _transform.LookAt(_targetTransform);
+        _transform.position = Game.Properties.Center + Vector3.back * _distance;
+        _transform.LookAt(Game.Properties.Center);
     }
 
     protected override void OnUnActive()

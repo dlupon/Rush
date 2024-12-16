@@ -15,6 +15,14 @@ namespace Com.UnBocal.Rush.Managers
         private float _tickRatio = 0f;
         private float _time = 0f;
 
+        private bool _isTicking = true;
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Unity
+        private void Awake()
+        {
+            ConnectEvent();
+        }
+
         private void Start() => StartTicking();
 
         private void Update()
@@ -22,12 +30,29 @@ namespace Com.UnBocal.Rush.Managers
             Ticking();
         }
 
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
+        private void ConnectEvent()
+        {
+            Game.Events.CubeDied.AddListener(OnCubeDied);
+            Game.Events.Running.AddListener(ResetTick);
+            Game.Events.StopRunning.AddListener(ResetTick);
+        }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
+        private void OnCubeDied(GameObject pCube)
+        {
+            _isTicking = false;
+            _time = 0;
+        }
+
+        // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
         private void StartTicking() => ResetTick();
 
         private void ResetTick()
         {
             _tickRatio = 0;
             _time = 0;
+            _isTicking = true;
         }
 
         private void UpdateTimeTick()
@@ -39,14 +64,14 @@ namespace Com.UnBocal.Rush.Managers
 
         private void Ticking()
         {
+            if (!_isTicking) return;
             if (_time >= TICK_DURATION && Game.Inputs.DEBUGNextTick())
             {
                 ResetTick();
                 Tick();
             }
             UpdateTimeTick();
-        }
-       
+        }       
 
         private void Tick()
         {

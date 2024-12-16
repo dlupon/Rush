@@ -12,12 +12,14 @@ public class UiManager : MonoBehaviour
     private RectTransform _transform;
 
     // Game View
-    [SerializeField] private RawImage _gameView;
+    [SerializeField] private GameObject _gameView;
 
     // UI
     [SerializeField] private GameObject _MainMenu;
     [SerializeField] private GameObject _LevelSelector;
     [SerializeField] private GameObject _HUD;
+    [SerializeField] private GameObject _ErrorCollision;
+    [SerializeField] private GameObject _ErrorFalling;
 
     // World
     [SerializeField] private Transform _worldParent;
@@ -27,7 +29,6 @@ public class UiManager : MonoBehaviour
     private void Awake()
     {
         SetComponents();
-        SetResolution();
         ConnectEvents();
     }
 
@@ -44,15 +45,16 @@ public class UiManager : MonoBehaviour
         _transform = GetComponent<RectTransform>();
     }
 
-    private void SetResolution()
-    {
-        if (Application.platform == RuntimePlatform.Android) _scaler.scaleFactor = 2;
-    }
-
     private void ConnectEvents()
     {
         Game.Events.LaunchGame.AddListener(OnLaunchGame);
         Game.Events.LaunchLevel.AddListener(OnPlay);
+        Game.Events.Running.AddListener(HideErrors);
+        Game.Events.StopRunning.AddListener(HideErrors);
+        Game.Events.CubeDiedFromFalling.AddListener(ShowErrorFalling);
+        Game.Events.CubeDiedFromCollision.AddListener(ShowErrorCollision);
+
+        Game.Events.End.AddListener(OnLaunchGame);
     }
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Events
@@ -68,7 +70,7 @@ public class UiManager : MonoBehaviour
     }
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Game View
-    private void SetGameVisibility(bool pVisible) => _gameView.enabled = pVisible;
+    private void SetGameVisibility(bool pVisible) => _gameView.SetActive(pVisible);
 
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // UI
@@ -81,6 +83,7 @@ public class UiManager : MonoBehaviour
         for (int lCurrentInterfaceIndex = 0; lCurrentInterfaceIndex < lInterfaceCount; lCurrentInterfaceIndex++)
         {
             lCurrent = _transform.GetChild(lCurrentInterfaceIndex).gameObject;
+            if (lCurrent == _gameView) continue;
             lCurrent.SetActive(false);
         }
         
@@ -105,6 +108,7 @@ public class UiManager : MonoBehaviour
 
     private void GoToMainMenue()
     {
+        ResetUI();
         SetGameVisibility(true);
         _MainMenu.SetActive(true);
         _worldMainMenu.SetActive(true);
@@ -120,5 +124,13 @@ public class UiManager : MonoBehaviour
     {
         SetGameVisibility(true);
         _HUD.SetActive(true);
+    }
+
+    private void ShowErrorCollision() => _ErrorCollision.SetActive(true);
+    private void ShowErrorFalling() => _ErrorFalling.SetActive(true);
+    private void HideErrors()
+    {
+        _ErrorFalling.SetActive(false);
+        _ErrorCollision.SetActive(false);
     }
 }

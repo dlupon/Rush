@@ -134,6 +134,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _transformRenderer: {fileID: 2519145748720455446}
+  _canBeForceReset: 1
+  _killOnLevelSelector: 1
 --- !u!114 &7030624615622036265
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,7 +197,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: eff3a8e8c41138044b6a1bf62407dcdf, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.107
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: eff3a8e8c41138044b6a1bf62407dcdf, type: 3}
       propertyPath: m_LocalPosition.z

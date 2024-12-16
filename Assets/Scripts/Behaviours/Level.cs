@@ -6,12 +6,13 @@ public class Level : MonoBehaviour
 {
     [SerializeField] private Game.Properties.ActionTile[] _actionTiles;
 
+    [SerializeField] private Vector3 _center = Vector3.zero;
+
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Load
     public void Launch()
     {
         SetActionTiles();
         SetLevel();
-        Game.Properties.InGame = true;
     }
 
     private void SetActionTiles()
@@ -22,6 +23,6 @@ public class Level : MonoBehaviour
     private void SetLevel()
     {
         transform.position = Vector3.zero;
-        Game.Properties.SetLevel(transform);
+        Game.Properties.SetLevel(transform, _center);
     }
 }

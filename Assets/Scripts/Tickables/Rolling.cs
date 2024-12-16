@@ -3,6 +3,7 @@ using UnityEngine;
 using Com.UnBocal.Rush.Properties;
 using DG.Tweening;
 using UnityEngine.Assertions.Must;
+using TMPro;
 
 namespace Com.UnBocal.Rush.Tickables
 {
@@ -17,6 +18,9 @@ namespace Com.UnBocal.Rush.Tickables
 
         // Animation
         [SerializeField] private AnimationCurve _curveMove = null;
+        [SerializeField] private AnimationCurve _curveTeleportationIn = null;
+        [SerializeField] private AnimationCurve _curveTeleportationOut = null;
+        private AnimationCurve _curveCurrent = null;
 
         // Stats
         private Action OnUpdate;
@@ -30,6 +34,10 @@ namespace Com.UnBocal.Rush.Tickables
 
         private Quaternion _startRotationPosition;
         private Quaternion _endRotationPosition;
+
+        // Scale
+        private Vector3 _startScale = Vector3.one;
+        private Vector3 _endScale = Vector3.one;
 
         // Movements
         private Vector3 _direction = Vector3.zero;
@@ -182,8 +190,15 @@ namespace Com.UnBocal.Rush.Tickables
         {
             ChangeEndPotition(p_newPosition);
 
-            OnTick = TickTeleportationIn;
-            OnUpdate = UpdateStuck;
+            OnTick = TickTeleportationOut;
+            OnUpdate = UpdateTeleportation;
+
+            m_transform.position = _startPosition + Vector3.up * .5f;
+
+            _curveCurrent = _curveTeleportationIn;
+
+            _startScale = Vector3.one;
+            _endScale = Vector3.zero;
         }
 
         #endregion
@@ -233,6 +248,12 @@ namespace Com.UnBocal.Rush.Tickables
             m_transform.position = _conveyorOffset + Vector3.Lerp(_startPosition, _endPosition, Game.Properties.TickRatio);
         }
 
+        private void UpdateTeleportation()
+        {
+            float lRatio = _curveCurrent.Evaluate(Game.Properties.TickRatio);
+            transform.localScale = Vector3.LerpUnclamped(_startScale, _endScale, lRatio);
+        }
+
         private void UpdateStuck() { }
         #endregion
 
@@ -248,16 +269,15 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void TickFalling() => UpdateNextPosition(Vector3.down);
 
-        private void TickTeleportationIn()
-        {
-            OnTick = TickTeleportationOut;
-            m_transform.position = _startPosition;
-        }
-
         private void TickTeleportationOut()
         {
-            SetStartMove();
-            m_transform.position = _endPosition;
+            OnTick = SetStartMove;
+            m_transform.position = _endPosition + Vector3.up * .5f;
+
+            _curveCurrent = _curveTeleportationIn;
+
+            _startScale = Vector3.zero;
+            _endScale = Vector3.one;
         }
         #endregion
 
@@ -324,9 +344,6 @@ namespace Com.UnBocal.Rush.Tickables
             _endPosition = _startPosition = m_transform.position + Vector3.down * .5f;
             _endRotation = _startRotation = m_transform.rotation;
             _direction = _direction == Vector3.zero ? m_transform.forward : _direction;
-
-            print($"{name} -> {_endPosition}");
-
         }
 
         private void SetCurve()

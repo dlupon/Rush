@@ -39,9 +39,10 @@ public class ActionTileAnimation : MonoBehaviour
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Animation
     private void UpdateRotation()
     {
+        return;
         float lRatio = Mathf.Cos(Game.Properties.TickRatio * Mathf.PI * 2);
         Quaternion lRotation = Quaternion.AngleAxis(_angle * lRatio, transform.forward);
 
-        _transformAction.rotation = lRotation * _baseRotation;
+        _transformAction.localRotation = lRotation * _baseRotation;
     }
 }

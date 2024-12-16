@@ -25,7 +25,7 @@ public class LevelManager : MonoBehaviour
 
     private void Start()
     {
-        
+        UnloadAllLevels();
     }
 
     // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization

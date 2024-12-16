@@ -106,21 +106,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_deleteOnStopRunning: 0
-  _transformRenderer: {fileID: 3123093124975947382}
   _materialColors: {fileID: 2100000, guid: 9119ba892272e1943b28d1b9f900a1ef, type: 2}
+  _cubeSpawnerFactory: {fileID: 0}
   _cubeFactory: {fileID: 4025685777736603955, guid: 910e272eaf6842b408cc7000f29b1318, type: 3}
+  _spawnLoop: 1
   _spawningRate: 01000000
-  _isCube: 0
-  _cubeLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  _sideLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  _groundLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  _debugSpawning: 1
+  _lastCubeSpawner: 1
 --- !u!1001 &8759989959500658894
 PrefabInstance:
   m_ObjectHideFlags: 0

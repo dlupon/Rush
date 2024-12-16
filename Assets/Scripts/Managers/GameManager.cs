@@ -1,6 +1,7 @@
 using UnityEngine;
 using Com.UnBocal.Rush.Properties;
 using UnityEngine.AI;
+using DG.Tweening;
 
 namespace Com.UnBocal.Rush.Managers
 {

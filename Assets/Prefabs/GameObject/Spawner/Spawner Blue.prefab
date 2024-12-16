@@ -12,6 +12,10 @@ PrefabInstance:
       propertyPath: _cubeFactory
       value: 
       objectReference: {fileID: 3356376783745495755, guid: 60d418a619f29134db7cc5a63d823cb1, type: 3}
+    - target: {fileID: -7527544201604957461, guid: c1623b576cb510d448215f74d8ee1660, type: 3}
+      propertyPath: _cubeSpawnerFactory
+      value: 
+      objectReference: {fileID: 3356376783745495755, guid: 4fdf1b4dc4826004e9107e411ab27331, type: 3}
     - target: {fileID: 1972968611524491610, guid: c1623b576cb510d448215f74d8ee1660, type: 3}
       propertyPath: _cubeType
       value: 1

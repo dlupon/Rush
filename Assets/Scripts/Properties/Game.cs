@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -15,7 +16,11 @@ namespace Com.UnBocal.Rush.Properties
             public static UnityEvent Running = new UnityEvent();
             public static UnityEvent StopRunning = new UnityEvent();
             public static UnityEvent End = new UnityEvent();
+            public static UnityEvent<GameObject> EndAnimation = new UnityEvent<GameObject>();
             public static UnityEvent<Properties.ActionTile[]> ActionTilesUpdated = new UnityEvent<Properties.ActionTile[]>();
+            public static UnityEvent<GameObject> CubeDied = new UnityEvent<GameObject>();
+            public static UnityEvent CubeDiedFromCollision = new UnityEvent();
+            public static UnityEvent CubeDiedFromFalling = new UnityEvent();
 
             // Tick
             public static UnityEvent Tick = new UnityEvent();
@@ -24,6 +29,7 @@ namespace Com.UnBocal.Rush.Properties
             public static UnityEvent LaunchLevel = new UnityEvent();
             public static UnityEvent<int> LevelLoad = new UnityEvent<int>();
             public static UnityEvent<Transform> LevelLoaded = new UnityEvent<Transform>();
+            public static UnityEvent LevelFinished = new UnityEvent();
 
             // Main Menu
             public static UnityEvent LaunchGame = new UnityEvent();
@@ -31,7 +37,16 @@ namespace Com.UnBocal.Rush.Properties
             // Hud / Tile Placer
             public static UnityEvent<Properties.ActionTile> TileSelected = new UnityEvent<Properties.ActionTile>();
             public static UnityEvent<Transform> TilePlaced = new UnityEvent<Transform>();
+            public static UnityEvent<Properties.ActionTile> TileUpdate = new UnityEvent<Properties.ActionTile>();
+            public static UnityEvent<GameObject> TileUpdateRemove = new UnityEvent<GameObject>();
+            public static UnityEvent TileUpdateCount = new UnityEvent();
             public static UnityEvent<Vector3> LevelTouched = new UnityEvent<Vector3>();
+
+            // Sounds
+            public static UnityEvent PlayCubeRolling = new UnityEvent();
+            public static UnityEvent PlayCubeWallCollision = new UnityEvent();
+            public static UnityEvent PlayCubeActionTile = new UnityEvent();
+            public static UnityEvent PlayCubeGoal = new UnityEvent();
         }
 
         public static class Properties
@@ -59,6 +74,8 @@ namespace Com.UnBocal.Rush.Properties
             // Level
             public static List<GameObject> Levels => _levels;
             private static List<GameObject> _levels;
+            public static Vector3 Center => _center;
+            private static Vector3 _center = Vector3.zero;
 
 
             // Screen Pixelization
@@ -90,8 +107,9 @@ namespace Com.UnBocal.Rush.Properties
             [Serializable] public class ActionTile
             {
                 public int MaxCount => _maxCount;
+                public int Left => _maxCount - Tiles.Count;
                 public bool CanPlaceNewTile => Tiles.Count < _maxCount;
-                public List<Transform> Tiles => CreateTilesist();
+                public List<Transform> Tiles => CreateTilesList();
 
                 [SerializeField] private int _maxCount;
                 public GameObject Factory;
@@ -99,7 +117,7 @@ namespace Com.UnBocal.Rush.Properties
 
                 private List<Transform> _tiles;
 
-                private List<Transform> CreateTilesist()
+                private List<Transform> CreateTilesList()
                 {
                     if (_tiles != null) return _tiles;
                     return _tiles = new List<Transform>();
@@ -120,6 +138,11 @@ namespace Com.UnBocal.Rush.Properties
                 }
 
                 public bool ContainsTile(Transform _tile) => _tiles.Contains(_tile);
+
+                public void Reset()
+                {
+                    _tiles = new List<Transform>();
+                }
             }
             #endregion
 
@@ -158,28 +181,32 @@ namespace Com.UnBocal.Rush.Properties
 
             public static bool SetRunning(bool pRunning)
             {
+                ResetCubeCount();
+
                 _running = pRunning;
                 if (_running) Events.Running.Invoke();
                 else Events.StopRunning.Invoke();
                 return _running;
             }
 
-            public static void SetLevel(Transform pLevel)
+            private static void ResetCubeCount() => _cubeCount = 0;
+
+            public static void SetLevel(Transform pLevel, Vector3 pCenter)
             {
+                _center = pCenter;
                 _currentLevel = pLevel;
 
-                Debug.Log($"{_currentLevel.name} loaded");
-
                 Events.LevelLoaded.Invoke(_currentLevel);
+                Events.LevelFinished.Invoke();
             }
 
             public static void CubeSpawn() => _cubeCount++;
 
-            public static void CubeDies()
+            public static void CubeDies(GameObject pCube)
             {
                 --_cubeCount;
                 if (_cubeCount > 0) return;
-                Events.End.Invoke();
+                Events.EndAnimation.Invoke(pCube);
             }
             #endregion
 
@@ -190,6 +217,9 @@ namespace Com.UnBocal.Rush.Properties
             public static void SetCurrentActionTiles(ActionTile[] pCurrentActionTiles)
             {
                 _currentActionTiles = pCurrentActionTiles;
+
+                foreach (ActionTile lActionTile in _currentActionTiles) lActionTile.Reset();
+
                 Events.ActionTilesUpdated.Invoke(_currentActionTiles);
             }
             #endregion
@@ -238,6 +268,14 @@ namespace Com.UnBocal.Rush.Properties
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Custom Methods
         #region Custom Methods
+        public static Vector3 Randomize(this Vector3 pVector)
+        {
+            pVector.x *= .5f - UnityEngine.Random.value;
+            pVector.y *= .5f - UnityEngine.Random.value;
+            pVector.z *= .5f - UnityEngine.Random.value;
+            return pVector;
+        }
+
         public static Vector3 Round(this Vector3 pVector)
         {
             pVector.x = Mathf.Round(pVector.x);

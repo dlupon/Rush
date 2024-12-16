@@ -10,12 +10,12 @@ namespace Com.UnBocal.Rush.Tickables
     public class Spawner : Tickable
     {
         // Components
-        [SerializeField] private Transform _transformRenderer;
         private GameObject _gameObject;
         private Typable _typable;
         private Collider _collider;
         private Rolling _rolling;
         private CollisionDetector _collisionDetector;
+        private JuicyCapter _juicyCapter;
 
         // Tick
         private Action OnTick;
@@ -24,12 +24,15 @@ namespace Com.UnBocal.Rush.Tickables
         [SerializeField] private Material _materialColors;
 
         // Spawner
+        [SerializeField] private GameObject _cubeSpawnerFactory;
         [SerializeField] private GameObject _cubeFactory;
         [SerializeField] private int _spawnLoop = 1;
         [SerializeField][Tooltip("0 -> No Spawn\n1 -> Forward\n2 -> Right\n3 -> Back\n4 -> Left")] private int[] _spawningRate;
-        [SerializeField] private bool _isCube = false;
+        [SerializeField] private bool _lastCubeSpawner = true;
+        private int _lastCubeIndex = -1;
         private int _spawningCount = 0;
         private int _spawningLoopCount = 0;
+        private int _totalCubeCount = 0;
 
         // Recovery
         private Vector3 _recoveryPosition;
@@ -38,6 +41,7 @@ namespace Com.UnBocal.Rush.Tickables
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Initialization
         protected override void OnStart()
         {
+            SetSpawnProperties();
             SetRecoveryProperties();
             SetPause();
         }
@@ -49,6 +53,17 @@ namespace Com.UnBocal.Rush.Tickables
             _typable = GetComponent<Typable>();
             _rolling = GetComponent<Rolling>();
             _collisionDetector = GetComponent<CollisionDetector>();
+            _juicyCapter = GetComponent<JuicyCapter>();
+        }
+
+        private void SetSpawnProperties()
+        {
+            for (int lLoopIndex = 0; lLoopIndex < _spawnLoop; lLoopIndex++)
+                foreach (int lCubeIndex in _spawningRate)
+                {
+                    if (lCubeIndex == 0) continue;
+                    _lastCubeIndex++;
+                }
         }
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Tick
@@ -57,10 +72,10 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Spawn()
         {
-            if (_spawningLoopCount > _spawnLoop || _spawningLoopCount >= _spawningRate.Length) { StopSpawning(); return; }
+            if (_totalCubeCount > _lastCubeIndex) { StopSpawning(); return; }
             if (_spawningRate[_spawningCount] != 0)
             {
-                if (_spawningCount == _spawningRate.Length - 1 && _isCube) { SpawnCube(SetAsCube()); return; }
+                if (_lastCubeSpawner && _lastCubeIndex <= _totalCubeCount) { SpawnCube(SetSpawnerCube()); return; }
                 else SpawnCube();
             }
 
@@ -75,6 +90,7 @@ namespace Com.UnBocal.Rush.Tickables
         #region Spawn
         private void SpawnCube(Transform pCurrentCube)
         {
+            _totalCubeCount++;
             Vector3 lDirection = Quaternion.AngleAxis(Game.Properties.ROTATION * (_spawningRate[_spawningCount] - 1), Vector3.up) * m_transform.forward;
             pCurrentCube.GetComponent<Rolling>().SetDirection(lDirection);
         }
@@ -88,23 +104,24 @@ namespace Com.UnBocal.Rush.Tickables
         }
 
 
-        private Transform SetAsCube()
+        private Transform SetSpawnerCube()
         {
-            _gameObject.layer = Game.Properties.LayerCube;
+            Transform _currentCube = Instantiate(_cubeSpawnerFactory, m_transform.position, transform.rotation).transform;
+            _currentCube.GetComponent<Typable>().SetCubeType(_typable.CubeType);
 
-            _rolling.ResetMovementProperties();
+            gameObject.SetActive(false);
 
-            StopSpawning();
+            // StopSpawning();
 
-            return m_transform;
+            return _currentCube;
         }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // On Running
         #region On Running
-        protected override void OnStopRunning() { SetPause(); print("SetPause"); }
+        protected override void OnStopRunning() { SetPause(); }
 
-        protected override void OnRunning() { SetSpawn(); print("SetSpawn"); }
+        protected override void OnRunning() { SetSpawn(); }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Set States
@@ -124,20 +141,12 @@ namespace Com.UnBocal.Rush.Tickables
             _gameObject.layer = Game.Properties.LayerIgnore;
             _spawningCount = 0;
             _spawningLoopCount = 0;
+            _totalCubeCount = 0;
 
             OnTick = Spawn;
         }
 
         private void StopSpawning() => OnTick = Wait;
-
-        private void SetCubeBehaviorOn(bool pOn)
-        {
-            return;
-            _rolling.enabled = pOn;
-            _rolling.SetListening(pOn);
-            _collisionDetector.enabled = pOn;
-            _collisionDetector.SetListening(pOn);
-        }
         #endregion
 
         // ----------------~~~~~~~~~~~~~~~~~~~==========================# // Recovery
@@ -150,6 +159,7 @@ namespace Com.UnBocal.Rush.Tickables
 
         private void Recovery()
         {
+            gameObject.SetActive(true);
             m_transform.position = _recoveryPosition;
             m_transform.rotation = _recoveryRotation;
         }
